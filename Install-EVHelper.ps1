@@ -5,8 +5,8 @@
 ##########################################################################
 
 $ErrorActionPreference = 'Stop'
-$LogFilePath = ($env:USERPROFILE) + '\Downloads\evhelperinstall.log'
-$EVHelperPath = ($env:USERPROFILE) + '\Downloads\EndpointVerification_admin.msi'
+$LogFilePath = "C:\Windows\Temp\Install-EVHelper.log"
+$EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
 $AlreadyInstalled = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi' 
 $BuiltinAdmin = Get-LocalUser -Name "Administrator"
