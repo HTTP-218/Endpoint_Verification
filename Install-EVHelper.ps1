@@ -106,9 +106,27 @@ if ($null -eq $AlreadyInstalled) {
         Write-Log NOTICE 'Builtin administrator account disabled'
     }
 
+    Start-Process "ms-settings:appsfeatures"
+    Start-Sleep -Seconds 2
+
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.MessageBox]::Show(
+        "Google Endpoint Verification has been installed. Please open your Chrome work profile and run the Endpoint Verification sync.",
+        "Installation Complete",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Information
+    )
+
 }
 else {
-    Write-Log NOTICE "Google Endpoint Verification Helper is already installed"
+    Write-Log NOTICE "Google Endpoint Verification is already installed"
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.MessageBox]::Show(
+        "Google Endpoint Verification is already installed.",
+        "Notice",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Information
+    )
 }
 
 Add-Content -Path $LogFilePath -Value "------------------------------ END OF SCRIPT -----------------------------" -Encoding Unicode
