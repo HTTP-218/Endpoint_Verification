@@ -34,7 +34,7 @@ function Write-Log {
     )
     $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $LogEntry = "$Timestamp - [$Level] $Message"
-    $LogEntry | Out-File -FilePath $LogFilePath -Append
+    $LogEntry | Out-File -FilePath $LogFilePath -Append -Encoding unicode
 }
 
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
