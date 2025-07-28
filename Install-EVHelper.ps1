@@ -9,7 +9,6 @@ $LogFilePath = "C:\Windows\Temp\Install-EVHelper.log"
 $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
 $AlreadyInstalled = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi' 
-$BuiltinAdmin = Get-LocalUser -Name "Administrator"
 $WordList = ((Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/wordlist.txt").Content -replace "`r", "") -split "`n"
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -76,9 +75,11 @@ if ($null -eq $AlreadyInstalled) {
     }
 
     # Enable Admin account
-    $AdminUser = ".\Administrator"
-    $Password = New-Passphrase | ConvertTo-SecureString -AsPlainText -Force
+    Write-Log INFO "Prompting for builtin administrator credentials..." 
+    $AdminCred = Get-Credential -UserName "administrator" -Message "Enter or set the local admin credentials."
+    
     Write-Log INFO "Checking if builtin administrator account is enabled..."
+    $BuiltinAdmin = Get-LocalUser -Name "Administrator"
 
     if (!$BuiltinAdmin.Enabled) {
         Write-Log INFO "Account is disabled. Enabling..."
@@ -86,10 +87,9 @@ if ($null -eq $AlreadyInstalled) {
             Enable-LocalUser -Name "Administrator"
             Write-Log NOTICE "Builtin administrator account enabled"
 
-            Set-LocalUser -Name "Administrator" -Password $Password
+            Set-LocalUser -Name "Administrator" -Password $AdminCred.Password
             Write-Log NOTICE "Administrator password updated"
 
-            $AdminCred = New-Object System.Management.Automation.PSCredential ($AdminUser, $Password)
             $SetByScript = 1
         }
         catch {
@@ -98,8 +98,7 @@ if ($null -eq $AlreadyInstalled) {
         }
     }
     else {
-        Write-Log INFO "Builtin administrator account is already enabled. Prompting for password..."
-        $AdminCred = Get-Credential -Message "Enter the local admin credentials"
+        Write-Log INFO "Account is already enabled" 
     }
 
     # Install and clean up files
@@ -107,14 +106,22 @@ if ($null -eq $AlreadyInstalled) {
     try {
         Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
         Write-Log NOTICE 'Endpoint Verification Helper installed'
+    }
+    catch {
+        Write-Log ERROR "Installation failed: $($_.Exception.Message)"
+        Show-MessageBox "Failed to install Google Endpoint Verification.`n`n$($_.Exception.Message)" "Error" "Error"
+        exit 1
+    }   
+    
+    try {
         Write-Log INFO 'Deleting .msi file...'
         Remove-Item $EVHelperPath -Force
         Write-Log NOTICE 'MSI file deleted'
+        Remove-Variable AdminCred
     }
     catch {
-        Write-Log ERROR "Installation and Cleanup failed: $($_.Exception.Message)"
-        Show-MessageBox "Failed to install Google Endpoint Verification.`n`n$($_.Exception.Message)" "Error" "Error"
-        exit 1
+        Write-Log ERROR "Cleanup failed: $($_.Exception.Message)"
+        continue
     }
 
     # Disable Administrator account if enabled by the script
@@ -125,7 +132,6 @@ if ($null -eq $AlreadyInstalled) {
     }
 
     Show-MessageBox "Google Endpoint Verification has been installed. Please open your Chrome work profile and run the Endpoint Verification sync." "Information" "Information"
-
 }
 else {
     Write-Log NOTICE "Google Endpoint Verification is already installed"
