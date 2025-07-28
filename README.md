@@ -5,7 +5,7 @@ This script installs the `Google Endpoint Verification Helper` app on Windows de
 ## Prerequisites
 
 - The script must be run with **administrator privileges** to enable the built-in Administrator account on your system.
-- This script is designed for **Windows** operating systems.
+- The `ps1` file can only be run in Powershell 5 (Powershell 7 does not support the Get-Package cmdlet).
 
 ## Usage
 
@@ -50,18 +50,7 @@ Once you have confirmed that the helper app is installed, you will need to run t
 
 ## Troubleshooting
 
-### Credentials Window
-If you see a credentials window, asking for your local admin username and password, then that means you have previously enabled the built-in Administrator account.
-
-1. Enter `administator` for the username.
-2. Enter the password you set for the account.
-
-The script should then continue to the install stage. Proceed with `Step 3`.
-
 ### Access Denied
-If it throws an `Access Denied` error, then you will need to install the helper app manually.
+If it throws an `Access Denied` error, after entering the admin credentials, then it's likely you ran the `ps1` file in a non-admin powershell session.
 
-1. Log out of your user account
-2. If you see an 'Administrator' account, log in to that account. If you only see `Other User`, click on this and log in with the username `.\administrator` and your password.
-3. Download the [Endpoint Verification Helper](https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi) app.
-4. Run the `EndpointVerification_admin.msi` file.
+The app will still install, despite the error message. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
