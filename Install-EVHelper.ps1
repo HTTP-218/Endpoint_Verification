@@ -9,22 +9,7 @@ $LogFilePath = "C:\Windows\Temp\Install-EVHelper.log"
 $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
 $AlreadyInstalled = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi' 
-$WordList = ((Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/wordlist.txt").Content -replace "`r", "") -split "`n"
 Add-Type -AssemblyName System.Windows.Forms
-
-function New-Passphrase {
-    param (
-        [int]$WordCount = 4
-    )
-
-    if ($WordCount -lt 1 -or $WordCount -gt $WordList.Count) {
-        throw "Word count must be between 1 and $($WordList.Count)."
-    }
-
-    $SelectedWords = Get-Random -InputObject $WordList -Count $WordCount
-    $passphrase = $SelectedWords -join "$"
-    return $passphrase
-}
 
 function Write-Log {
     param (
@@ -66,7 +51,7 @@ if ($null -eq $AlreadyInstalled) {
     Write-Log INFO "Downloading EV Helper File..."
     try {
         Invoke-WebRequest $EVHelperURL -outfile $EVHelperPath
-        Write-Log NOTICE 'EV Helper file downloaded'
+        Write-Log INFO 'EV Helper file downloaded'
     }
     catch {
         Write-Log ERROR "Failed to download EV Helper file: $($_.Exception.Message)"
