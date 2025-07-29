@@ -70,16 +70,6 @@ function Write-Message {
     }
 }
 
-function Get-ConsoleUser {
-    $session = (Get-CimInstance Win32_ComputerSystem).UserName
-    if ($session) {
-        return $session.Split('\')[-1]
-    } else {
-        Write-Message -Message "No user currently logged into console session" -Level "WARN"
-        return $null
-    }
-}
-
 #endregion
 
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
@@ -102,9 +92,8 @@ Sort-Object MinBuild -Descending |
 Select-Object -First 1
 
 if ($null -eq $MatchingRequirement) {
-    $Message = "Windows build $($DisplayVersion) is not compliant"
-    Write-Message -Message $Message -Level "WARN"
-    $Summary += $Message
+    Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
+    $Summary += "Windows build $($DisplayVersion) is not compliant"
 } 
 else {
     Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
@@ -116,7 +105,7 @@ else {
 $ChromeVersion = (Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }).Version 
 
 if ($ChromeVersion -lt $Variables.ChromeVersion) {
-    Write-Message -Message "Chrome is not compliant" -Level "WARN"
+    Write-Message -Message "Chrome vesion $ChromeVersion is not compliant" -Level "WARN"
     $Summary += "Chrome version $ChromeVersion is below the minimum requirement"
 }
 else {
@@ -126,7 +115,7 @@ else {
 #====================================================================================================#
 #                             [ Endpoint Verification Extension Check ]                              #
 #====================================================================================================#
-$CurrentUser = Get-ConsoleUser
+$CurrentUser = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).split('\')[-1]
 $ChromeProfiles = Get-ChildItem -Path "C:\Users\$CurrentUser\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
 $EVExtension = @()
 
@@ -200,7 +189,7 @@ if ($null -eq $EVHelperApp) {
             exit 1
         }
 
-        # Enable Admin account
+        # Built-in admin account is needed to install the MSI package
         Write-Message -Message "Prompting for builtin administrator credentials..." -Level "INFO"
         $AdminCred = Get-Credential -UserName "administrator" -Message "Enter or set the local admin credentials."
 
@@ -226,7 +215,6 @@ if ($null -eq $EVHelperApp) {
             Write-Message -Message  "Account is already enabled" -Level "INFO"
         }
 
-        # Run the MSI installer
         Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
         try {
             Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
@@ -236,7 +224,6 @@ if ($null -eq $EVHelperApp) {
             exit 1
         }
         
-        # Clean up files in Temp folder and remove admin password from memory
         try {
             Write-Message -Message  "Deleting .msi file..." -Level "INFO"           
             Remove-Item $EVHelperPath -Force
@@ -248,7 +235,6 @@ if ($null -eq $EVHelperApp) {
             continue
         }
 
-        # Disable Administrator account if enabled by the script
         if ($SetByScript -eq 1) {
             Write-Message -Message  "Disabling builtin administrator account..." -Level "INFO"
             Disable-LocalUser -Name "Administrator"
@@ -289,7 +275,7 @@ else {
 
 $SummaryText
 
-Please address each issue and then run the Endpoint Verification sync to regain access.
+Please address each issue, then run the Endpoint Verification sync to regain access.
 "@
     Show-MessageBox -Message $Message -Title "Information" -Icon "Error"
 }
