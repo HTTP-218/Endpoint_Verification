@@ -1,6 +1,6 @@
-# Google Endpoint Verification Helper Installation Script
+# Google CAA Compliance Tool
 
-This script installs the `Google Endpoint Verification Helper` app on Windows devices. The helper app collects system information, such as OS version and antivirus status, which is then used by the `Endpoint Verification` Chrome Extension.
+This script will check if a device is compliant with the `Context-Aware Access` rules and will fix certain non-compliant parts
 
 ## Prerequisites
 
@@ -9,39 +9,44 @@ This script installs the `Google Endpoint Verification Helper` app on Windows de
 
 ## Usage
 
-### Step 1: Open PowerShell with Administrator Privileges
+### Option 1
+
+Download the [.exe](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v1.0.0) file and run it. This requires admin privileges to run.
+
+You may see a warning from windows that the file was blocked. Click `More info` and then hit `Run Anyways`.
+
+### Option 2
+
+#### Step 1: Open PowerShell with Administrator Privileges
 
 To run this script, you'll need to launch `PowerShell` or `Terminal` as an Administrator. Here are two ways to do that:
 
-#### Method 1: Start Menu
+##### Method 1: Start Menu
 
 1. Right-click on the `Start Menu` (Windows icon).
 2. Select **`Windows PowerShell (Admin)`** (for Windows 10) or **`Terminal (Admin)`** (for Windows 11).
 
-#### Method 2: Search and Launch
+##### Method 2: Search and Launch
 
 1. Press the `Windows key`.
 2. Type `PowerShell` (for Windows 10) or `Terminal` (for Windows 11).
 3. Press `Ctrl + Shift + Enter` or right-click the app and choose **`Run as administrator`** to launch it with administrator privileges.
 
-### Step 2: Run the Command
+#### Step 2: Run the Command
 
 Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window:
 
 ```powershell
-irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/Install-EVHelper.ps1" | iex
+ irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/CAA-ComplianceTool.ps1" | iex
 ```
-Hit `Enter` and a download should start shortly. Once the download popup has disappeared, follow the steps below:
+Hit `Enter`
 
-### Step 3: Verify the Installation
+####  Step 3: Remediate
 
-1. Press the `Windows key`.
-2. Type `Add or Remove Programs` and click the first option. This should take you to the Apps settings page.
-3. Scroll down or search for `Google Endpoint Verification` to check that it has been installed.
+If Windows is not compliant, you will need to download the latest Windows ISO and upgrade your version. You can use [this](https://youtu.be/dofyWO7msDA?t=689) guide.
 
-###  Step 4: Run the Endpoint Verification Sync
+If Chrome is not compliant
 
-Once you have confirmed that the helper app is installed, you will need to run the Endpoint Verification sync, to update your device's details on Google Workspace.
 1. Open `Google Chrome` and choose your work profile.
 2. Locate and click `Extensions` (puzzle piece icon in the top right corner of Chrome).
 3. Click the `Endpoint Verification` extension.
