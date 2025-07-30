@@ -10,7 +10,7 @@
 
 Add-Type -AssemblyName System.Windows.Forms
 $ErrorActionPreference = "Stop"
-$LogFilePath = "C:\Windows\Temp\CAA-Compliance.log"
+$LogFilePath = "C:\Windows\Temp\CAA-ComplianceFix.log"
 $JSONPath = "C:\Windows\Temp\caa.json"
 Invoke-WebRequest -Uri "https://drive.google.com/uc?export=download&id=1D-LoZOFrcXmFEulDjfywONZ2O12d98ty" -OutFile $JSONPath
 $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
