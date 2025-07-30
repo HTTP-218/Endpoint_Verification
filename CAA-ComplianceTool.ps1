@@ -136,7 +136,7 @@ foreach ($ChromeProfile in $ChromeProfiles) {
     $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
     if ($ExtensionsFolder) {
         $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID}
-        if ($ExtensionsPath){
+        if ($ExtensionsPath) {
             $EVExtension += $ExtensionsPath
         }
     }
@@ -231,7 +231,8 @@ if ($null -eq $EVHelperApp) {
         Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
         try {
             Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
-            Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE"        }
+            Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE"
+        }
         catch {
             Write-Message -Message  "Installation failed!`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
             exit 1
