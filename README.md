@@ -39,7 +39,7 @@ To run this script, you'll need to launch `PowerShell` or `Terminal` as an Admin
 Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window:
 
 ```powershell
- irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/CAA-ComplianceTool.ps1" | iex
+ irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/CAA-ComplianceFix.ps1" | iex
 ```
 Hit `Enter`
 
