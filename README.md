@@ -67,4 +67,4 @@ If it throws an `Access Denied` error, after entering the admin credentials, the
 The Helper app will still install, despite the error message. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
 
 ### Unknown Errors
-If the script encounters any errors, check `C:\Windows\Temp\CAA-Compliance.log` to see the exact cause.
+If the script encounters any errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
