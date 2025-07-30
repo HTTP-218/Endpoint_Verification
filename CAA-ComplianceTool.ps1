@@ -70,6 +70,19 @@ function Write-Message {
     }
 }
 
+function Get-LoggedInUser {
+    $SessionLine = (quser 2>$null | Where-Object { $_ -match ">" })
+    if ($SessionLine) {
+        # Remove leading '>' and extra spaces
+        $SessionLine = $SessionLine -replace '^>\s*', ''       
+        $Columns = $SessionLine -replace '\s{2,}', ',' -split ','
+
+        return $columns[0]
+    }
+    return $null
+}
+
+
 #endregion
 
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
@@ -115,7 +128,7 @@ else {
 #====================================================================================================#
 #                             [ Endpoint Verification Extension Check ]                              #
 #====================================================================================================#
-$CurrentUser = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).split('\')[-1]
+$CurrentUser = Get-LoggedInUser
 $ChromeProfiles = Get-ChildItem -Path "C:\Users\$CurrentUser\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
 $EVExtension = @()
 
