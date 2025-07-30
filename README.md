@@ -11,7 +11,7 @@ This PowerShell script checks whether your Windows device is compliant with Goog
 
 ### **Option 1: Run Prebuilt Executable (Recommended)**
 
-1. Download the latest `.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v1.0.0)
+1. Download the latest `ComplianceFix.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v1.0.0)
 2. Double-click to run the file. You will be prompted for the administrator credentials.
 3. If prompted with a security warning:
    - Click `More info`
