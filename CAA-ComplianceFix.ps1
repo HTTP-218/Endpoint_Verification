@@ -54,7 +54,7 @@ function Write-Message {
         [bool]$Console = $true,
         [bool]$Log = $true,
         [bool]$Dialogue = $false,
-        [string]$DialogueTitle = "CAA Compliance Tool"
+        [string]$DialogueTitle = "CAA Compliance Fix"
     )
 
     if ($Console) { Write-Host "[$Level] $Message" }
@@ -88,7 +88,7 @@ function Get-LoggedInUser {
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 #                                                                        #
-#                         CAA-ComplianceTool.ps1                         #
+#                          CAA-ComplianceFix.ps1                         #
 #                                                                        #
 ##########################################################################
 "
