@@ -68,3 +68,17 @@ The Helper app will still install, despite the error message. If you run the scr
 
 ### Unknown Errors
 If the script encounters any errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
+
+## Attribution
+
+Icons provided by Flaticon
+
+ - <a href="https://www.flaticon.com/free-icons/computer" title="computer icons">Computer icons created by Maxim Basinski Premium - Flaticon</a>
+
+- <a href="https://www.flaticon.com/free-icons/shield" title="shield icons">Shield icons created by Good Ware - Flaticon</a>
+
+- <a href="https://www.flaticon.com/free-icons/download" title="download icons">Download icons created by joalfa - Flaticon</a>
+
+- <a href="https://www.flaticon.com/free-icons/magnifying-glass" title="magnifying glass icons">Magnifying glass icons created by Freepik - Flaticon</a>
+
+- <a href="https://www.flaticon.com/free-icons/tick" title="tick icons">Tick icons created by edt.im - Flaticon</a>
