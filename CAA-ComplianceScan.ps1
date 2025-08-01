@@ -40,7 +40,21 @@ function Show-MessageBox {
         [string]$Icon = "Information",
         [System.Windows.Forms.MessageBoxButtons]$Buttons = [System.Windows.Forms.MessageBoxButtons]::OK
     )
-    return [System.Windows.Forms.MessageBox]::Show($Message, $Title, $Buttons, [System.Windows.Forms.MessageBoxIcon]::$Icon)
+
+    # Create a hidden "topmost" window to own the message box
+    Add-Type -AssemblyName System.Windows.Forms
+    $form = New-Object System.Windows.Forms.Form
+    $form.TopMost = $true
+    $form.StartPosition = "Manual"
+    $form.Size = '1,1'
+    $form.Location = '0,0'
+    $form.Show()
+    $form.Hide()
+
+    $Result =  [System.Windows.Forms.MessageBox]::Show($Form, $Message, $Title, $Buttons, [System.Windows.Forms.MessageBoxIcon]::$Icon)
+
+    $form.Dispose()
+    return $Result
 }
 
 # Wrapper for different log message types
