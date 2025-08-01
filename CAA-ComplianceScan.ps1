@@ -12,7 +12,7 @@ Add-Type -AssemblyName System.Windows.Forms
 $ErrorActionPreference = "Stop"
 $LogFilePath = "C:\Windows\Temp\CAA-ComplianceScan.log"
 $JSONPath = "C:\Windows\Temp\caa.json"
-Invoke-WebRequest -Uri "https://drive.google.com/uc?export=download&id=1D-LoZOFrcXmFEulDjfywONZ2O12d98ty" -OutFile $JSONPath
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
 $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 $Summary = @()
 
@@ -43,17 +43,17 @@ function Show-MessageBox {
 
     # Create a hidden "topmost" window to own the message box
     Add-Type -AssemblyName System.Windows.Forms
-    $form = New-Object System.Windows.Forms.Form
-    $form.TopMost = $true
-    $form.StartPosition = "Manual"
-    $form.Size = '1,1'
-    $form.Location = '0,0'
-    $form.Show()
-    $form.Hide()
+    $Form = New-Object System.Windows.Forms.Form
+    $Form.TopMost = $true
+    $Form.StartPosition = "Manual"
+    $Form.Size = '1,1'
+    $Form.Location = '0,0'
+    $Form.Show()
+    $Form.Hide()
 
     $Result =  [System.Windows.Forms.MessageBox]::Show($Form, $Message, $Title, $Buttons, [System.Windows.Forms.MessageBoxIcon]::$Icon)
 
-    $form.Dispose()
+    $Form.Dispose()
     return $Result
 }
 
