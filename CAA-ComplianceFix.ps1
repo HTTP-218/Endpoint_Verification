@@ -1,6 +1,6 @@
 ######################################################################################################
 #                                                                                                    #
-#                    		             CAA-ComplianceFix.ps1                    		             #
+#                                       CAA-ComplianceFix.ps1                                        #
 #                                                                                                    #
 ######################################################################################################
 
@@ -12,7 +12,7 @@ Add-Type -AssemblyName System.Windows.Forms
 $ErrorActionPreference = "Stop"
 $LogFilePath = "C:\Windows\Temp\CAA-ComplianceFix.log"
 $JSONPath = "C:\Windows\Temp\caa.json"
-Invoke-WebRequest -Uri "https://drive.google.com/uc?export=download&id=1D-LoZOFrcXmFEulDjfywONZ2O12d98ty" -OutFile $JSONPath
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
 $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'
