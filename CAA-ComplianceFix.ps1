@@ -8,11 +8,11 @@
 #                                           [ Variables ]                                            #
 #====================================================================================================#
 
-Add-Type -AssemblyName System.Windows.Forms
+#Add-Type -AssemblyName System.Windows.Forms
 $ErrorActionPreference = "Stop"
 $LogFilePath = "C:\Windows\Temp\CAA-ComplianceFix.log"
 $JSONPath = "C:\Windows\Temp\caa.json"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
+Invoke-WebRequest -Uri "https://drive.google.com/uc?export=download&id=1D-LoZOFrcXmFEulDjfywONZ2O12d98ty" -OutFile $JSONPath
 $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'
@@ -42,7 +42,21 @@ function Show-MessageBox {
         [string]$Icon = "Information",
         [System.Windows.Forms.MessageBoxButtons]$Buttons = [System.Windows.Forms.MessageBoxButtons]::OK
     )
-    return [System.Windows.Forms.MessageBox]::Show($Message, $Title, $Buttons, [System.Windows.Forms.MessageBoxIcon]::$Icon)
+
+    # Create a hidden "topmost" window to own the message box
+    Add-Type -AssemblyName System.Windows.Forms
+    $form = New-Object System.Windows.Forms.Form
+    $form.TopMost = $true
+    $form.StartPosition = "Manual"
+    $form.Size = '1,1'
+    $form.Location = '0,0'
+    $form.Show()
+    $form.Hide()
+
+    $Result =  [System.Windows.Forms.MessageBox]::Show($Form, $Message, $Title, $Buttons, [System.Windows.Forms.MessageBoxIcon]::$Icon)
+
+    $form.Dispose()
+    return $Result
 }
 
 # Wrapper for different log message types
@@ -81,7 +95,6 @@ function Get-LoggedInUser {
     }
     return $null
 }
-
 
 #endregion
 
@@ -255,6 +268,11 @@ if ($null -eq $EVHelperApp) {
             Write-Message -Message  "Deleting .msi file..." -Level "INFO"           
             Remove-Item $EVHelperPath -Force
             Write-Message -Message  "MSI file deleted" -Level "NOTICE"
+
+            Write-Message -Message  "Deleting JSON file..." -Level "INFO"           
+            Remove-Item $JSONPath -Force
+            Write-Message -Message  "JSON file deleted" -Level "NOTICE"            
+
             Remove-Variable AdminCred
         }
         catch {
