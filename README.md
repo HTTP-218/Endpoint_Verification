@@ -76,7 +76,7 @@ Run the `ps1` or `exe` file again to check that everything is compliant.
 ## Troubleshooting
 
 ### Access Denied
-If it throws an `Access Denied` error, after entering the admin credentials, then it's likely you ran the `ps1` file in a non-admin powershell session.
+If it throws an `Access Denied` error, while installing the MSI file, then it's likely you ran the `ps1` file in a non-admin powershell session.
 
 Even if an error appears, the Helper app usually installs successfully. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
 
