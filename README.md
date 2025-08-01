@@ -1,6 +1,20 @@
-# Google CAA Compliance Tool
+# CAA Compliance Tool for Google Workspace
 
-This PowerShell script checks whether your Windows device is compliant with Google Context-Aware Access (CAA) requirements and offers to fix common non-compliant issues.
+This PowerShell-based utility checks, and optionally fixes, your Windows device for compliance with Google Context-Aware Access (CAA) policies
+
+There are three included scripts:
+
+- **CAA-ComplianceFix.ps1**  
+  Full tool that checks and fixes issues. Requires admin privileges.
+  
+- **CAA-ComplianceScan.ps1**  
+  Scans and reports compliance without making changes. Does not require admin privileges.
+  
+- **Install-EVHelper.ps1**  
+  Checks for and installs the Google Endpoint Verification Helper if missing. Requires admin privileges.
+
+
+The `Fix` script includes both the scan and install scripts, as well as an additional firewall fix. The `Scan` script is best used for internally managed devices as it doesn't require admin rights to run.
 
 ## Prerequisites
 
@@ -64,7 +78,7 @@ Run the `ps1` or `exe` file again to check that everything is compliant.
 ### Access Denied
 If it throws an `Access Denied` error, after entering the admin credentials, then it's likely you ran the `ps1` file in a non-admin powershell session.
 
-The Helper app will still install, despite the error message. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
+Even if an error appears, the Helper app usually installs successfully. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
 
 ### Unknown Errors
 If the script encounters any errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
