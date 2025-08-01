@@ -8,7 +8,6 @@
 #                                           [ Variables ]                                            #
 #====================================================================================================#
 
-Add-Type -AssemblyName System.Windows.Forms
 $ErrorActionPreference = "Stop"
 $LogFilePath = "C:\Windows\Temp\CAA-ComplianceScan.log"
 $JSONPath = "C:\Windows\Temp\caa.json"
