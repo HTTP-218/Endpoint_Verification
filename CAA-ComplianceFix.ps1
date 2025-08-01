@@ -191,20 +191,32 @@ if ($null -eq $EVHelperApp) {
     $InstallResponse = Show-MessageBox -Message "Endpoint Verification Helper is missing.`n`nWould you like to install it now?" -Title "Install EV Helper?" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
     
     if ($InstallResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
-         Write-Message -Message "Downloading EV Helper File..." -Level "INFO"
 
-        try {
-            Invoke-WebRequest $EVHelperURL -outfile $EVHelperPath
-            Write-Message -Message "Endpoint Verification Helper file downloaded" -Level "NOTICE" 
+        Write-Message -Message "Checking if Endpoint Verification Helper MSI file is present..." -Level "INFO"
+        if (!(Test-Path $EVHelperPath)) {
+            Write-Message -Message "MSI file is missing. Downloading the file..." -Level "INFO"
+
+            try {
+                Invoke-WebRequest $EVHelperURL -outfile $EVHelperPath
+                Write-Message -Message "Endpoint Verification Helper file downloaded" -Level "NOTICE" 
+            }
+            catch {
+                Write-Message -Message "Failed to download EV Helper file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+                exit 1
+            }
         }
-        catch {
-            Write-Message -Message "Failed to download EV Helper file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
-            exit 1
+        else {
+            Write-Message -Message "EV Helper MSI file has already been downloaded" -Level "INFO"
         }
 
         # Built-in admin account is needed to install the MSI package
         Write-Message -Message "Prompting for builtin administrator credentials..." -Level "INFO"
         $AdminCred = Get-Credential -UserName "administrator" -Message "Enter or set the local admin credentials."
+        
+        if ($null -eq $AdminCred) {
+            Write-Message -Message "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue." -Level "ERROR" -Dialogue $true
+            exit 1
+        }
 
         Write-Message -Message "Checking if builtin administrator account is enabled..." -Level "INFO"
         $BuiltinAdmin = Get-LocalUser -Name "Administrator"
@@ -222,6 +234,7 @@ if ($null -eq $EVHelperApp) {
             }
             catch {
                 Write-Message -Message "Failed to activate builtin administrator account`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+                exit 1
             }
         }
         else {

@@ -7,7 +7,7 @@
 $ErrorActionPreference = 'Stop'
 $LogFilePath = "C:\Windows\Temp\Install-EVHelper.log"
 $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
-$AlreadyInstalled = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
+$EVHelperApp = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi' 
 Add-Type -AssemblyName System.Windows.Forms
 
@@ -44,25 +44,38 @@ Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 
 Write-Log INFO "Checking if Endpoint Verification Helper is installed..."
 
-if ($null -eq $AlreadyInstalled) {
+if ($null -eq $EVHelperApp) {
     Write-Log NOTICE "Endpoint Verification Helper is not installed"
 
-    # Downloads the file into the current user's downloads folder
-    Write-Log INFO "Downloading EV Helper File..."
-    try {
-        Invoke-WebRequest $EVHelperURL -outfile $EVHelperPath
-        Write-Log INFO 'EV Helper file downloaded'
+    # Downloads the file into the Temp directory
+    Write-Log INFO "Checking if Endpoint Verification Helper MSI file is present..."
+    if (!(Test-Path $EVHelperPath)) {
+        Write-Log INFO "MSI file is missing. Downloading the file..."
+        try {
+            Invoke-WebRequest $EVHelperURL -outfile $EVHelperPath
+            Write-Log NOTICE 'Endpoint Verification Helper file downloaded'
+        }
+        catch {
+            Write-Log ERROR "Failed to download EV Helper file: $($_.Exception.Message)"
+            Show-MessageBox "Failed to download Google Endpoint Verification.`n`n$($_.Exception.Message)" "Error" "Error"
+            exit 1
+        }
     }
-    catch {
-        Write-Log ERROR "Failed to download EV Helper file: $($_.Exception.Message)"
-        Show-MessageBox "Failed to download Google Endpoint Verification.`n`n$($_.Exception.Message)" "Error" "Error"
-        exit 1
+    else {
+        Write-Log INFO "EV Helper MSI file has already been downloaded"
     }
+    
 
     # Enable Admin account
     Write-Log INFO "Prompting for builtin administrator credentials..." 
     $AdminCred = Get-Credential -UserName "administrator" -Message "Enter or set the local admin credentials."
     
+    if ($null -eq $AdminCred) {
+        Write-Log ERROR "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue."
+        Show-MessageBox "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue." "Error" "Error"
+        exit 1
+    }
+
     Write-Log INFO "Checking if builtin administrator account is enabled..."
     $BuiltinAdmin = Get-LocalUser -Name "Administrator"
 
