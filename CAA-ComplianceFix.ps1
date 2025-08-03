@@ -5,22 +5,8 @@
 ######################################################################################################
 
 #====================================================================================================#
-#                                           [ Variables ]                                            #
-#====================================================================================================#
-
-$ErrorActionPreference = "Stop"
-$LogFilePath = "C:\Windows\Temp\CAA-ComplianceFix.log"
-$JSONPath = "C:\Windows\Temp\caa.json"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
-$Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
-$EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
-$EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'
-$Summary = @()
-
-#====================================================================================================#
 #                                           [ Functions ]                                            #
 #====================================================================================================#
-
 #region Functions
 function Write-Log {
     param (
@@ -83,19 +69,15 @@ function Write-Message {
     }
 }
 
-function Get-LoggedInUser {
-    $SessionLine = (quser 2>$null | Where-Object { $_ -match ">" })
-    if ($SessionLine) {
-        # Remove leading '>' and extra spaces
-        $SessionLine = $SessionLine -replace '^>\s*', ''       
-        $Columns = $SessionLine -replace '\s{2,}', ',' -split ','
-
-        return $columns[0]
-    }
-    return $null
-}
-
 #endregion
+
+#====================================================================================================#
+#                                           [ Variables ]                                            #
+#====================================================================================================#
+$ErrorActionPreference = "Stop"
+$ProgressPreference = 'SilentlyContinue'
+$LogFilePath = "C:\Windows\Temp\CAA-ComplianceFix.log"
+$Summary = @()
 
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
@@ -105,9 +87,20 @@ Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 "
 
+try {
+    $JSONPath = "C:\Windows\Temp\caa.json"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/caa.json" -OutFile $JSONPath
+    $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
+}
+catch {
+    Write-Message -Message "Failed to initialise JSON config file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+}
+
 #====================================================================================================#
 #                                      [ Windows Build Check ]                                       #
 #====================================================================================================#
+Write-Message -Message "Starting Windows Build check..." -Level "INFO"
+
 $WindowsBuild = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuildNumber
 $DisplayVersion = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").DisplayVersion
 
@@ -118,53 +111,122 @@ Select-Object -First 1
 
 if ($null -eq $MatchingRequirement) {
     Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
-    $Summary += "Windows build $($DisplayVersion) is not compliant"
+    $Summary += "Windows build $($DisplayVersion) is not supported"
 } 
 else {
     Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
 }
 
 #====================================================================================================#
-#                                      [ Chrome Version Check ]                                      #
+#                                          [ Chrome Check ]                                          #
 #====================================================================================================#
-$ChromeVersion = (Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }).Version 
+Write-Message -Message "Starting Chrome check..." -Level "INFO"
 
-if ($ChromeVersion -lt $Variables.ChromeVersion) {
-    Write-Message -Message "Chrome vesion $ChromeVersion is not compliant" -Level "WARN"
-    $Summary += "Chrome version $ChromeVersion is below the minimum requirement"
+$ChromeURL = "https://dl.google.com/tag/s/dl/chrome/install/googlechromestandaloneenterprise64.msi"
+$ChromePath = "C:\Windows\Temp\googlechromestandaloneenterprise64.msi"
+$Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
+
+if ($null -eq $Chrome) {
+    Write-Message -Message "Google Chrome is not installed on this device" -Level "WARN"
+
+    $InstallResponse = Show-MessageBox -Message "Google Chrome is missing.`n`nWould you like to install it now?" -Title "Install Google Chrome?" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
+    
+    if ($InstallResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
+        try {
+            Write-Message -Message "Downloading Google Chrome MSI file. This may take a few minutes..." -Level "INFO"
+            Invoke-WebRequest $ChromeURL -outfile $ChromePath
+            Write-Message -Message "Downloaded Google Chrome MSI file" -Level "NOTICE"
+        }
+        catch {
+            Write-Message -Message "Failed to download Google Chrome MSI file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+            exit 1
+        }
+
+        try {
+            Write-Message -Message "Installing Google Chrome..." -Level "INFO"
+            Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$ChromePath`"" -wait
+            Write-Message -Message "Google Chrome has been installed" -Level "NOTICE" -Dialogue $true
+        }
+        catch {
+            Write-Message -Message "Failed to install Google Chrome`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+            exit 1
+        }
+
+        # Fresh install doesn't have User Data directory until Chrome is opened. This will prevent EV extension check from failing.
+        try {
+            Write-Message -Message "Launching Google Chrome to create User Data directory..." -Level "INFO"
+            Start-Process -FilePath "C:\Program Files\Google\Chrome\Application\chrome.exe" --silent-launch
+        }
+        catch {
+            Write-Message -Message "Failed to launch Google Chrome`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+            exit 1
+        }
+
+        try {
+            Write-Message -Message  "Deleting Chrome msi file..." -Level "INFO"           
+            Remove-Item $ChromePath -Force
+            Write-Message -Message  "Chrome MSI file deleted" -Level "NOTICE"
+        }
+        catch {
+            Write-Message -Message  "Failed to delete Chrome MSI file: $($_.Exception.Message)" -Level "WARN"
+        }    
+    }
+    else {
+        Write-Message -Message "User chose not to install Google Chrome." -Level "NOTICE"
+        $Summary += "Google Chrome is not installed"
+    }
 }
 else {
-    Write-Message -Message "Chrome is compliant with version $($ChromeVersion)" -Level "INFO"
+    Write-Message -Message "Google Chrome is already installed. Checking version..." -Level "INFO"
+    if ($Chrome.Version -lt $Variables.ChromeVersion) {
+        Write-Message -Message "Chrome is not compliant" -Level "WARN"
+        $Summary += "Chrome version $($Chrome.Version) is below the minimum requirement"
+    }   
+    else {
+        Write-Message -Message "Chrome is compliant with version $($Chrome.Version)" -Level "INFO"
+    }
 }
 
 #====================================================================================================#
 #                             [ Endpoint Verification Extension Check ]                              #
 #====================================================================================================#
-$CurrentUser = Get-LoggedInUser
-$ChromeProfiles = Get-ChildItem -Path "C:\Users\$CurrentUser\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
-$EVExtension = @()
+Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
 
-foreach ($ChromeProfile in $ChromeProfiles) {
-    $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
-    if ($ExtensionsFolder) {
-        $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID}
-        if ($ExtensionsPath) {
-            $EVExtension += $ExtensionsPath
+$Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
+
+if ($Chrome) {
+    $AppDataPath = [System.Environment]::GetFolderPath("LocalApplicationData")
+    $ChromeProfiles = Get-ChildItem -Path ($AppDataPath + "\Google\Chrome\User Data") -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
+    $EVExtension = @()
+
+    foreach ($ChromeProfile in $ChromeProfiles) {
+        $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
+        if ($ExtensionsFolder) {
+            $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID }
+            if ($ExtensionsPath) {
+                $EVExtension += $ExtensionsPath
+            }
         }
     }
-}
 
-if ($EVExtension) {
-    Write-Message -Message "Endpoint Verification extension is installed in one or more profiles" -Level "INFO"
+    if ($EVExtension) {
+        Write-Message -Message "Endpoint Verification extension is installed in one or more profiles" -Level "INFO"
+    }
+    else {
+        Write-Message -Message  "Endpoint Verification extension could not be found in any Chrome profile" -Level "WARN"
+        $Summary += "Endpoint Verification extension is not installed"
+    }
 }
 else {
-    Write-Message -Message  "Endpoint Verification extension could not be found in any Chrome profile" -Level "WARN"
+    Write-Message -Message  "Chrome is not installed. Skipping Endpoint Verification extension check" -Level "WARN"
     $Summary += "Endpoint Verification extension is not installed"
 }
 
 #====================================================================================================#
 #                                     [ Firewall Status Check ]                                      #
 #====================================================================================================#
+Write-Message -Message "Starting Firewall Status check..." -Level "INFO"
+
 $FirewallStatus = Get-NetFirewallProfile | Select-Object Name, Enabled
 
 foreach ($NetProfile in $FirewallStatus) {
@@ -195,6 +257,10 @@ foreach ($NetProfile in $FirewallStatus) {
 #====================================================================================================#
 #                               [ Endpoint Verification Helper Check ]                               #
 #====================================================================================================#
+Write-Message -Message "Starting Endpoint Verification Helper check..." -Level "INFO"
+
+$EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
+$EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'
 $EVHelperApp = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 
 if ($null -eq $EVHelperApp) {
@@ -266,17 +332,12 @@ if ($null -eq $EVHelperApp) {
         try {
             Write-Message -Message  "Deleting .msi file..." -Level "INFO"           
             Remove-Item $EVHelperPath -Force
-            Write-Message -Message  "MSI file deleted" -Level "NOTICE"
-
-            Write-Message -Message  "Deleting JSON file..." -Level "INFO"           
-            Remove-Item $JSONPath -Force
-            Write-Message -Message  "JSON file deleted" -Level "NOTICE"            
+            Write-Message -Message  "MSI file deleted" -Level "NOTICE"           
 
             Remove-Variable AdminCred
         }
         catch {
-            Write-Message -Message  "Cleanup failed: $($_.Exception.Message)" -Level "WARN"
-            continue
+            Write-Message -Message  "Failed to delete EV Helper MSI file: $($_.Exception.Message)" -Level "WARN"
         }
 
         if ($SetByScript -eq 1) {
@@ -285,7 +346,7 @@ if ($null -eq $EVHelperApp) {
             Write-Message -Message  "Builtin administrator account disabled" -Level "NOTICE"
         }
 
-        Show-MessageBox -Message "Google Endpoint Verification has been installed." -Title "Information" -Icon "Information"
+        Write-Message -Message "Google Endpoint Verification has been installed" -Level "NOTICE" -Dialogue $true 
     }
     else {
         Write-Message -Message "User chose not to install Endpoint Verification Helper." -Level "NOTICE"
@@ -297,8 +358,24 @@ else {
 }
 
 #====================================================================================================#
+#                                             [ Cleanup ]                                            #
+#====================================================================================================#
+Write-Message -Message "Cleaning up temporary files..." -Level "INFO"
+
+try {
+    Write-Message -Message  "Deleting JSON file..." -Level "INFO"           
+    Remove-Item $JSONPath -Force
+    Write-Message -Message  "JSON file deleted" -Level "NOTICE"     
+}
+catch {
+    Write-Message -Message  "Failed to delete JSON file: $($_.Exception.Message)" -Level "WARN"
+}
+
+#====================================================================================================#
 #                                       [ Compliance Summary ]                                       #
 #====================================================================================================#
+Write-Message -Message  "Generating summary report..." -Level "INFO"        
+
 if ($Summary.Count -eq 0) {
     $Message = @"
     All checks passed. Your device is compliant.
@@ -310,7 +387,7 @@ if ($Summary.Count -eq 0) {
       3. Click 'SYNC NOW'
       4. Reload your Gmail tab
 "@
-    Show-MessageBox -Message $Message -Title "Information" -Icon "Information"
+    Write-Message -Message $Message -Level "INFO" -Console $false -Log $false -Dialogue $true
 } 
 else {
     $SummaryText = ($Summary | ForEach-Object { "    - $_" }) -join "`n"
@@ -321,5 +398,7 @@ $SummaryText
 
 Please address each issue, then run the Endpoint Verification sync to regain access.
 "@
-    Show-MessageBox -Message $Message -Title "Information" -Icon "Error"
+    Write-Message -Message $Message -Level "ERROR" -Console $false -Log $false -Dialogue $true
 }
+
+exit 0
