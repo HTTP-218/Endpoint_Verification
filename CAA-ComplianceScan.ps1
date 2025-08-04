@@ -5,20 +5,8 @@
 ######################################################################################################
 
 #====================================================================================================#
-#                                           [ Variables ]                                            #
-#====================================================================================================#
-
-$ErrorActionPreference = "Stop"
-$LogFilePath = "C:\Windows\Temp\CAA-ComplianceScan.log"
-$JSONPath = "C:\Windows\Temp\caa.json"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
-$Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
-$Summary = @()
-
-#====================================================================================================#
 #                                           [ Functions ]                                            #
 #====================================================================================================#
-
 #region Functions
 function Write-Log {
     param (
@@ -41,7 +29,6 @@ function Show-MessageBox {
     )
 
     # Create a hidden "topmost" window to own the message box
-    Add-Type -AssemblyName System.Windows.Forms
     $Form = New-Object System.Windows.Forms.Form
     $Form.TopMost = $true
     $Form.StartPosition = "Manual"
@@ -95,17 +82,38 @@ function Get-LoggedInUser {
 
 #endregion
 
+#====================================================================================================#
+#                                           [ Variables ]                                            #
+#====================================================================================================#
+$ErrorActionPreference = "Stop"
+$ProgressPreference = 'SilentlyContinue'
+$LogFilePath = "C:\Windows\Temp\CAA-ComplianceScan.log"
+$Summary = @()
+
+Add-Type -AssemblyName System.Windows.Forms
+
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 #                                                                        #
-#                         CAA-ComplianceScan.ps1                         #
+#                          CAA-ComplianceFix.ps1                         #
 #                                                                        #
 ##########################################################################
 "
 
+try {
+    $JSONPath = "C:\Windows\Temp\caa.json"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/caa.json" -OutFile $JSONPath
+    $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
+}
+catch {
+    Write-Message -Message "Failed to initialise JSON config file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+}
+
 #====================================================================================================#
 #                                      [ Windows Build Check ]                                       #
 #====================================================================================================#
+Write-Message -Message "Starting Windows Build check..." -Level "INFO"
+
 $WindowsBuild = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuildNumber
 $DisplayVersion = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").DisplayVersion
 
@@ -116,53 +124,72 @@ Select-Object -First 1
 
 if ($null -eq $MatchingRequirement) {
     Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
-    $Summary += "Windows build $($DisplayVersion) is not compliant"
+    $Summary += "Windows build $($DisplayVersion) is not supported"
 } 
 else {
     Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
 }
 
 #====================================================================================================#
-#                                      [ Chrome Version Check ]                                      #
+#                                          [ Chrome Check ]                                          #
 #====================================================================================================#
-$ChromeVersion = (Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }).Version 
+Write-Message -Message "Starting Chrome check..." -Level "INFO"
 
-if ($ChromeVersion -lt $Variables.ChromeVersion) {
-    Write-Message -Message "Chrome is not compliant" -Level "WARN"
-    $Summary += "Chrome version $ChromeVersion is below the minimum requirement"
+$Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
+
+if ($null -eq $Chrome) {
+    Write-Message -Message "Google Chrome is not installed on this device" -Level "WARN"
+    $Summary += "Chrome is not installed"
 }
 else {
-    Write-Message -Message "Chrome is compliant with version $($ChromeVersion)" -Level "INFO"
+    Write-Message -Message "Google Chrome is already installed. Checking version..." -Level "INFO"
+    if ($Chrome.Version -lt $Variables.ChromeVersion) {
+        Write-Message -Message "Chrome is not compliant" -Level "WARN"
+        $Summary += "Chrome version $($Chrome.Version) is below the minimum requirement"
+    }   
+    else {
+        Write-Message -Message "Chrome is compliant with version $($Chrome.Version)" -Level "INFO"
+    }
 }
 
 #====================================================================================================#
 #                             [ Endpoint Verification Extension Check ]                              #
 #====================================================================================================#
-$CurrentUser = Get-LoggedInUser
-$ChromeProfiles = Get-ChildItem -Path "C:\Users\$CurrentUser\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
-$EVExtension = @()
+Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
 
-foreach ($ChromeProfile in $ChromeProfiles) {
-    $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
-    if ($ExtensionsFolder) {
-        $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID}
-        if ($ExtensionsPath){
-            $EVExtension += $ExtensionsPath
-        }
-    }
-}
-
-if ($EVExtension) {
-    Write-Message -Message "Endpoint Verification extension is installed in one or more profiles" -Level "INFO"
+if ($null -eq $Chrome) {
+    Write-Message -Message "Google Chrome is not installed. Skipping Endpoint Verification Extension Check" -Level "WARN"
+    $Summary += "Endpoint Verification extension is not installed"
 }
 else {
-    Write-Message -Message  "Endpoint Verification extension could not be found in any Chrome profile" -Level "WARN"
-    $Summary += "Endpoint Verification extension is not installed"
+    $CurrentUser = Get-LoggedInUser
+    $ChromeProfiles = Get-ChildItem -Path "C:\Users\$CurrentUser\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
+    $EVExtension = @()
+
+    foreach ($ChromeProfile in $ChromeProfiles) {
+        $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
+        if ($ExtensionsFolder) {
+            $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID }
+            if ($ExtensionsPath) {
+                $EVExtension += $ExtensionsPath
+            }
+        }
+    }
+
+    if ($EVExtension) {
+        Write-Message -Message "Endpoint Verification extension is installed in one or more profiles" -Level "INFO"
+    }
+    else {
+        Write-Message -Message  "Endpoint Verification extension could not be found in any Chrome profile" -Level "WARN"
+        $Summary += "Endpoint Verification extension is not installed"
+    }
 }
 
 #====================================================================================================#
 #                                     [ Firewall Status Check ]                                      #
 #====================================================================================================#
+Write-Message -Message "Starting Firewall Status check..." -Level "INFO"
+
 $FirewallStatus = Get-NetFirewallProfile | Select-Object Name, Enabled
 
 foreach ($NetProfile in $FirewallStatus) {
@@ -178,6 +205,8 @@ foreach ($NetProfile in $FirewallStatus) {
 #====================================================================================================#
 #                               [ Endpoint Verification Helper Check ]                               #
 #====================================================================================================#
+Write-Message -Message "Starting Endpoint Verification Helper check..." -Level "INFO"
+
 $EVHelperApp = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 
 if ($null -eq $EVHelperApp) {
@@ -186,6 +215,20 @@ if ($null -eq $EVHelperApp) {
 }
 else {
     Write-Message -Message  "Endpoint Verification Helper is installed" -Level "INFO"
+}
+
+#====================================================================================================#
+#                                             [ Cleanup ]                                            #
+#====================================================================================================#
+Write-Message -Message "Cleaning up temporary files..." -Level "INFO"
+
+try {
+    Write-Message -Message  "Deleting JSON file..." -Level "INFO"           
+    Remove-Item $JSONPath -Force
+    Write-Message -Message  "JSON file deleted" -Level "NOTICE"     
+}
+catch {
+    Write-Message -Message  "Failed to delete JSON file: $($_.Exception.Message)" -Level "WARN"
 }
 
 #====================================================================================================#
@@ -215,3 +258,5 @@ Please address each issue and then run the Endpoint Verification sync to regain 
 "@
     Show-MessageBox -Message $Message -Title "Information" -Icon "Error"
 }
+
+exit 0
