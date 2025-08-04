@@ -29,7 +29,6 @@ function Show-MessageBox {
     )
 
     # Create a hidden "topmost" window to own the message box
-    Add-Type -AssemblyName System.Windows.Forms
     $Form = New-Object System.Windows.Forms.Form
     $Form.TopMost = $true
     $Form.StartPosition = "Manual"
@@ -78,6 +77,8 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = 'SilentlyContinue'
 $LogFilePath = "C:\Windows\Temp\CAA-ComplianceFix.log"
 $Summary = @()
+
+Add-Type -AssemblyName System.Windows.Forms
 
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
@@ -193,10 +194,18 @@ else {
 Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
 
 $Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
+$Username = ((Get-CimInstance Win32_ComputerSystem).UserName).Split('\')[-1]
 
 if ($Chrome) {
-    $AppDataPath = [System.Environment]::GetFolderPath("LocalApplicationData")
-    $ChromeProfiles = Get-ChildItem -Path ($AppDataPath + "\Google\Chrome\User Data") -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
+    if (!$Username) {
+        Write-Message -Message "Could not grab current user's name. You may be using this script over a remote session." -Level "ERROR"
+        exit 1
+    }
+    else {
+        Write-Message -Message "Current console user is: $Username" -Level "INFO"
+    }
+
+    $ChromeProfiles = Get-ChildItem -Path "C:\Users\$Username\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
     $EVExtension = @()
 
     foreach ($ChromeProfile in $ChromeProfiles) {
