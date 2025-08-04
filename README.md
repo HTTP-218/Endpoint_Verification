@@ -20,6 +20,7 @@ The `Fix` script includes both the scan and install scripts, as well as an addit
 
 - The script must be run with **administrator privileges** to enable the built-in Administrator account on your system.
 - The `ps1` file is compatible with Powershell 5 (Powershell 7+ is not supported due to `Get-Package` limitations).
+- This script currently does not support use over remote sessions
 
 ## Usage
 
