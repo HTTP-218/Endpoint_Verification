@@ -194,7 +194,7 @@ else {
 Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
 
 $Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
-$Username = ((Get-CimInstance Win32_ComputerSystem).UserName).Split('\')[-1]
+$Username = (Get-CimInstance Win32_ComputerSystem).UserName
 
 if ($Chrome) {
     if (!$Username) {
@@ -202,6 +202,7 @@ if ($Chrome) {
         exit 1
     }
     else {
+        $Username = $Username.Split('\')[-1]
         Write-Message -Message "Current console user is: $Username" -Level "INFO"
     }
 
