@@ -102,7 +102,7 @@ Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 
 try {
     $JSONPath = "C:\Windows\Temp\caa.json"
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/caa.json" -OutFile $JSONPath
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
     $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 }
 catch {
