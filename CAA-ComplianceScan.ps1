@@ -95,7 +95,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 #                                                                        #
-#                          CAA-ComplianceFix.ps1                         #
+#                         CAA-ComplianceScan.ps1                         #
 #                                                                        #
 ##########################################################################
 "
