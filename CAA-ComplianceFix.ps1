@@ -97,6 +97,16 @@ catch {
     Write-Message -Message "Failed to initialise JSON config file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
 }
 
+$Username = (Get-CimInstance Win32_ComputerSystem).UserName
+if (!$Username) {
+    Write-Message -Message "Could not grab current user's name. You may be using this script over a remote session, which is currently unsupported." -Level "ERROR" -Dialogue $true
+    exit 1
+}
+ else {
+    $Username = $Username.Split('\')[-1]
+    Write-Message -Message "Current console user is: $Username" -Level "INFO"
+}
+
 #====================================================================================================#
 #                                      [ Windows Build Check ]                                       #
 #====================================================================================================#
@@ -194,7 +204,6 @@ else {
 Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
 
 $Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
-$Username = (Get-CimInstance Win32_ComputerSystem).UserName
 
 if ($Chrome) {
     if (!$Username) {
