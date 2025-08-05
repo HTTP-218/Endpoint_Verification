@@ -95,6 +95,7 @@ try {
 }
 catch {
     Write-Message -Message "Failed to initialise JSON config file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+    exit 1
 }
 
 $Username = (Get-CimInstance Win32_ComputerSystem).UserName
