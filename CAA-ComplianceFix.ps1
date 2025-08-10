@@ -88,8 +88,12 @@ Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 "
 
+#====================================================================================================#
+#                                        [ Load JSON Config ]                                        #
+#====================================================================================================#
+$JSONPath = "C:\Windows\Temp\caa.json"
+
 try {
-    $JSONPath = "C:\Windows\Temp\caa.json"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
     $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 }
@@ -98,12 +102,16 @@ catch {
     exit 1
 }
 
+#====================================================================================================#
+#                                        [ Get Current User ]                                        #
+#====================================================================================================#
 $Username = (Get-CimInstance Win32_ComputerSystem).UserName
+
 if (!$Username) {
-    Write-Message -Message "Could not grab current user's name. You may be using this script over a remote session, which is currently unsupported." -Level "ERROR" -Dialogue $true
+    Write-Message -Message "Could not get current user's name. You may be using this script over a remote session, which is currently unsupported." -Level "ERROR" -Dialogue $true
     exit 1
 }
- else {
+else {
     $Username = $Username.Split('\')[-1]
     Write-Message -Message "Current console user is: $Username" -Level "INFO"
 }
@@ -111,32 +119,39 @@ if (!$Username) {
 #====================================================================================================#
 #                                      [ Windows Build Check ]                                       #
 #====================================================================================================#
-Write-Message -Message "Starting Windows Build check..." -Level "INFO"
+Write-Message -Message "========== Starting Windows Build Check ==========" -Level "INFO"
 
-$WindowsBuild = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuildNumber
-$DisplayVersion = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").DisplayVersion
+$WinRegKey = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -ErrorAction SilentlyContinue
+$WindowsBuild = $WinRegKey.CurrentBuildNumber
+$DisplayVersion = $WinRegKey.DisplayVersion
 
-$MatchingRequirement = $Variables.BuildRequirements |
-Where-Object { $WindowsBuild -ge $_.MinBuild -and ($_.MaxBuild -eq $null -or $WindowsBuild -le $_.MaxBuild) } |
-Sort-Object MinBuild -Descending |
-Select-Object -First 1
-
-if ($null -eq $MatchingRequirement) {
-    Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
-    $Summary += "Windows build $($DisplayVersion) is not supported"
-} 
+if (!$WindowsBuild) {
+    Write-Message -Message "Unable to determine Windows build number. You can check this manually with the winver command" -Level "WARN"
+    $Summary += "Unable to check Windows build number"
+}
 else {
-    Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
+    $MatchingRequirement = $Variables.BuildRequirements |
+    Where-Object { $WindowsBuild -ge $_.MinBuild -and ($_.MaxBuild -eq $null -or $WindowsBuild -le $_.MaxBuild) } |
+    Sort-Object MinBuild -Descending |
+    Select-Object -First 1
+
+    if ($null -eq $MatchingRequirement) {
+        Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
+        $Summary += "Windows build $($DisplayVersion) is not supported"
+    } 
+    else {
+        Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
+    }
 }
 
 #====================================================================================================#
 #                                          [ Chrome Check ]                                          #
 #====================================================================================================#
-Write-Message -Message "Starting Chrome check..." -Level "INFO"
+Write-Message -Message "========== Chrome Check ========== " -Level "INFO"
 
 $ChromeURL = "https://dl.google.com/tag/s/dl/chrome/install/googlechromestandaloneenterprise64.msi"
 $ChromePath = "C:\Windows\Temp\googlechromestandaloneenterprise64.msi"
-$Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
+$Chrome = Get-Package -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*Google Chrome*" }
 
 if ($null -eq $Chrome) {
     Write-Message -Message "Google Chrome is not installed on this device" -Level "WARN"
@@ -144,18 +159,25 @@ if ($null -eq $Chrome) {
     $InstallResponse = Show-MessageBox -Message "Google Chrome is missing.`n`nWould you like to install it now?" -Title "Install Google Chrome?" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
     
     if ($InstallResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
-        try {
-            Write-Message -Message "Downloading Google Chrome MSI file. This may take a few minutes..." -Level "INFO"
-            Invoke-WebRequest $ChromeURL -outfile $ChromePath
-            Write-Message -Message "Downloaded Google Chrome MSI file" -Level "NOTICE"
+        
+        Write-Message -Message "Checking if Chrome MSI file is present..." -Level "INFO"
+        if (!(Test-Path $ChromePath)) {
+            Write-Message -Message "MSI file is missing, downloading Google Chrome MSI file. This may take a few minutes..." -Level "INFO"
+            try {
+                Invoke-WebRequest $ChromeURL -outfile $ChromePath
+                Write-Message -Message "Downloaded Google Chrome MSI file" -Level "NOTICE"
+            }
+            catch {
+                Write-Message -Message "Failed to download Google Chrome MSI file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+                exit 1
+            }    
         }
-        catch {
-            Write-Message -Message "Failed to download Google Chrome MSI file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
-            exit 1
+        else {
+            Write-Message -Message "Chrome MSI file has already been downloaded" -Level "INFO"
         }
 
+        Write-Message -Message "Installing Google Chrome..." -Level "INFO"
         try {
-            Write-Message -Message "Installing Google Chrome..." -Level "INFO"
             Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$ChromePath`"" -wait
             Write-Message -Message "Google Chrome has been installed" -Level "NOTICE" -Dialogue $true
         }
@@ -165,8 +187,8 @@ if ($null -eq $Chrome) {
         }
 
         # Fresh install doesn't have User Data directory until Chrome is opened. This will prevent EV extension check from failing.
-        try {
-            Write-Message -Message "Launching Google Chrome to create User Data directory..." -Level "INFO"
+        Write-Message -Message "Launching Google Chrome to create User Data directory..." -Level "INFO"
+        try {    
             Start-Process -FilePath "C:\Program Files\Google\Chrome\Application\chrome.exe" --silent-launch
         }
         catch {
@@ -174,8 +196,8 @@ if ($null -eq $Chrome) {
             exit 1
         }
 
-        try {
-            Write-Message -Message  "Deleting Chrome msi file..." -Level "INFO"           
+        Write-Message -Message  "Deleting Chrome MSI file..." -Level "INFO"
+        try {    
             Remove-Item $ChromePath -Force
             Write-Message -Message  "Chrome MSI file deleted" -Level "NOTICE"
         }
@@ -202,30 +224,20 @@ else {
 #====================================================================================================#
 #                             [ Endpoint Verification Extension Check ]                              #
 #====================================================================================================#
-Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
+Write-Message -Message "========== Endpoint Verification Extension Check ==========" -Level "INFO"
 
-$Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
+$Chrome = Get-Package -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*Google Chrome*" }
 
 if ($Chrome) {
-    if (!$Username) {
-        Write-Message -Message "Could not grab current user's name. You may be using this script over a remote session." -Level "ERROR"
-        exit 1
-    }
-    else {
-        $Username = $Username.Split('\')[-1]
-        Write-Message -Message "Current console user is: $Username" -Level "INFO"
-    }
-
     $ChromeProfiles = Get-ChildItem -Path "C:\Users\$Username\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
     $EVExtension = @()
 
     foreach ($ChromeProfile in $ChromeProfiles) {
-        $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
-        if ($ExtensionsFolder) {
-            $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID }
-            if ($ExtensionsPath) {
-                $EVExtension += $ExtensionsPath
-            }
+        $ExtensionsFolderPath = Join-Path $ChromeProfile.FullName "Extensions"
+        $ExtensionPath = Join-Path $ExtensionsFolderPath $Variables.ExtensionID
+        
+        if (Test-Path $ExtensionPath) {
+            $EVExtension += $ExtensionPath
         }
     }
 
@@ -245,7 +257,7 @@ else {
 #====================================================================================================#
 #                                     [ Firewall Status Check ]                                      #
 #====================================================================================================#
-Write-Message -Message "Starting Firewall Status check..." -Level "INFO"
+Write-Message -Message "========== Firewall Status Check ==========" -Level "INFO"
 
 $FirewallStatus = Get-NetFirewallProfile | Select-Object Name, Enabled
 
@@ -277,11 +289,11 @@ foreach ($NetProfile in $FirewallStatus) {
 #====================================================================================================#
 #                               [ Endpoint Verification Helper Check ]                               #
 #====================================================================================================#
-Write-Message -Message "Starting Endpoint Verification Helper check..." -Level "INFO"
+Write-Message -Message "========== Endpoint Verification Helper Check ==========" -Level "INFO"
 
 $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
 $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'
-$EVHelperApp = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
+$EVHelperApp = Get-Package -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 
 if ($null -eq $EVHelperApp) {
     Write-Message -Message "Endpoint Verification Helper is not installed" -Level "WARN"
@@ -293,7 +305,6 @@ if ($null -eq $EVHelperApp) {
         Write-Message -Message "Checking if Endpoint Verification Helper MSI file is present..." -Level "INFO"
         if (!(Test-Path $EVHelperPath)) {
             Write-Message -Message "MSI file is missing. Downloading the file..." -Level "INFO"
-
             try {
                 Invoke-WebRequest $EVHelperURL -outfile $EVHelperPath
                 Write-Message -Message "Endpoint Verification Helper file downloaded" -Level "NOTICE" 
@@ -340,7 +351,7 @@ if ($null -eq $EVHelperApp) {
         }
 
         Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
-        try {
+        try {            
             Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
             Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE"
         }
@@ -348,9 +359,9 @@ if ($null -eq $EVHelperApp) {
             Write-Message -Message  "Installation failed!`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
             exit 1
         }
-        
-        try {
-            Write-Message -Message  "Deleting .msi file..." -Level "INFO"           
+
+        Write-Message -Message  "Deleting MSI file..." -Level "INFO"
+        try {                       
             Remove-Item $EVHelperPath -Force
             Write-Message -Message  "MSI file deleted" -Level "NOTICE"           
 
@@ -380,10 +391,10 @@ else {
 #====================================================================================================#
 #                                             [ Cleanup ]                                            #
 #====================================================================================================#
-Write-Message -Message "Cleaning up temporary files..." -Level "INFO"
+Write-Message -Message "========== Clean Up ==========" -Level "INFO"
 
+Write-Message -Message  "Deleting JSON file..." -Level "INFO"
 try {
-    Write-Message -Message  "Deleting JSON file..." -Level "INFO"           
     Remove-Item $JSONPath -Force
     Write-Message -Message  "JSON file deleted" -Level "NOTICE"     
 }
@@ -394,7 +405,8 @@ catch {
 #====================================================================================================#
 #                                       [ Compliance Summary ]                                       #
 #====================================================================================================#
-Write-Message -Message  "Generating summary report..." -Level "INFO"        
+Write-Message -Message  "========== Summary ==========" -Level "INFO"
+Write-Message -Message  "Generating summary report..." -Level "INFO"
 
 if ($Summary.Count -eq 0) {
     $Message = @"
