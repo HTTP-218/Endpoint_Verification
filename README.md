@@ -32,6 +32,10 @@ The `Fix` script includes both the scan and install scripts, as well as an addit
    - Click `More info`
    - Then click `Run anyway`
 
+```fix
+NOTE: If you are running a 3rd party Antivirus, disable it and run the script again. The AV will incorrectly identify the exe as malware
+```
+
 ### **Option 2: Run Script Manually**
 
 ### Step 1: Open PowerShell with Administrator Privileges
@@ -54,7 +58,7 @@ To run this script, you'll need to launch `PowerShell` or `Terminal` as an Admin
 Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window:
 
 ```powershell
- irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/caa-compliance/CAA-ComplianceFix.ps1" | iex
+irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-ComplianceFix.ps1" | iex
 ```
 Hit `Enter`
 
@@ -82,18 +86,4 @@ If it throws an `Access Denied` error, while installing the MSI file, then it's 
 Even if an error appears, the Helper app usually installs successfully. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
 
 ### Unknown Errors
-If the script encounters any errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
-
-## Attribution
-
-Icons provided by Flaticon
-
- - <a href="https://www.flaticon.com/free-icons/computer" title="computer icons">Computer icons created by Maxim Basinski Premium - Flaticon</a>
-
-- <a href="https://www.flaticon.com/free-icons/shield" title="shield icons">Shield icons created by Good Ware - Flaticon</a>
-
-- <a href="https://www.flaticon.com/free-icons/download" title="download icons">Download icons created by joalfa - Flaticon</a>
-
-- <a href="https://www.flaticon.com/free-icons/magnifying-glass" title="magnifying glass icons">Magnifying glass icons created by Freepik - Flaticon</a>
-
-- <a href="https://www.flaticon.com/free-icons/tick" title="tick icons">Tick icons created by edt.im - Flaticon</a>
+If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
