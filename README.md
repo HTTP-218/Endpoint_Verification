@@ -50,17 +50,28 @@ To run this script, you'll need to launch `PowerShell` or `Terminal` as an Admin
 **Method 2: Search and Launch**
 
 1. Press the `Windows key`.
-2. Type `PowerShell` (for Windows 10) or `Terminal` (for Windows 11).
+2. Type `PowerShell` (for Windows 10 or 11) or `Terminal` (for Windows 11).
 3. Press `Ctrl + Shift + Enter` or right-click the app and choose **`Run as administrator`** to launch it with administrator privileges.
 
 ### Step 2: Download and Run Script
 
-Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window:
+Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window (Choose **one**):
 
+**CAA-ComplianceFix**
 ```powershell
 irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-ComplianceFix.ps1" | iex
 ```
-Hit `Enter`
+
+**CAA-ComplianceScan**
+```powershell
+irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-ComplianceScan.ps1" | iex
+```
+
+**Install-EVHelper**
+```powershell
+irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/Install-EVHelper.ps1" | iex
+```
+Hit `Enter` to run the command
 
 ###  Step 3: Fix Compliance Issues
 
@@ -86,7 +97,7 @@ If it throws an `Access Denied` error, while installing the MSI file, then it's 
 Even if an error appears, the Helper app usually installs successfully. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
 
 ### Unknown Errors
-If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
+If the script encounters any unexpected errors, check `C:\Windows\Temp\` and look for a `.log` file with the script's name. 
 
 ## Attribution
 
