@@ -100,40 +100,52 @@ Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 "
 
+#====================================================================================================#
+#                                        [ Load JSON Config ]                                        #
+#====================================================================================================#
+$JSONPath = "C:\Windows\Temp\caa.json"
+
 try {
-    $JSONPath = "C:\Windows\Temp\caa.json"
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
     $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 }
 catch {
     Write-Message -Message "Failed to initialise JSON config file`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+    exit 1
 }
 
 #====================================================================================================#
 #                                      [ Windows Build Check ]                                       #
 #====================================================================================================#
-Write-Message -Message "Starting Windows Build check..." -Level "INFO"
+Write-Message -Message "========== Starting Windows Build Check ==========" -Level "INFO"
 
-$WindowsBuild = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").CurrentBuildNumber
-$DisplayVersion = (Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").DisplayVersion
+$WinRegKey = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -ErrorAction SilentlyContinue
+$WindowsBuild = $WinRegKey.CurrentBuildNumber
+$DisplayVersion = $WinRegKey.DisplayVersion
 
-$MatchingRequirement = $Variables.BuildRequirements |
-Where-Object { $WindowsBuild -ge $_.MinBuild -and ($_.MaxBuild -eq $null -or $WindowsBuild -le $_.MaxBuild) } |
-Sort-Object MinBuild -Descending |
-Select-Object -First 1
-
-if ($null -eq $MatchingRequirement) {
-    Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
-    $Summary += "Windows build $($DisplayVersion) is not supported"
-} 
+if (!$WindowsBuild) {
+    Write-Message -Message "Unable to determine Windows build number. You can check this manually with the winver command" -Level "WARN"
+    $Summary += "Unable to check Windows build number"
+}
 else {
-    Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
+    $MatchingRequirement = $Variables.BuildRequirements |
+    Where-Object { $WindowsBuild -ge $_.MinBuild -and ($_.MaxBuild -eq $null -or $WindowsBuild -le $_.MaxBuild) } |
+    Sort-Object MinBuild -Descending |
+    Select-Object -First 1
+
+    if ($null -eq $MatchingRequirement) {
+        Write-Message -Message "Windows build $($DisplayVersion) is not compliant" -Level "WARN"
+        $Summary += "Windows build $($DisplayVersion) is not supported"
+    } 
+    else {
+        Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
+    }
 }
 
 #====================================================================================================#
 #                                          [ Chrome Check ]                                          #
 #====================================================================================================#
-Write-Message -Message "Starting Chrome check..." -Level "INFO"
+Write-Message -Message "========== Chrome Check ========== " -Level "INFO"
 
 $Chrome = Get-Package | Where-Object { $_.Name -like "*Google Chrome*" }
 
@@ -155,24 +167,21 @@ else {
 #====================================================================================================#
 #                             [ Endpoint Verification Extension Check ]                              #
 #====================================================================================================#
-Write-Message -Message "Starting Endpoint Verification Extension check..." -Level "INFO"
+Write-Message -Message "========== Endpoint Verification Extension Check ==========" -Level "INFO"
 
-if ($null -eq $Chrome) {
-    Write-Message -Message "Google Chrome is not installed. Skipping Endpoint Verification Extension Check" -Level "WARN"
-    $Summary += "Endpoint Verification extension is not installed"
-}
-else {
-    $CurrentUser = Get-LoggedInUser
-    $ChromeProfiles = Get-ChildItem -Path "C:\Users\$CurrentUser\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
+$Chrome = Get-Package -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*Google Chrome*" }
+$Username = Get-LoggedInUser
+
+if ($Chrome) {
+    $ChromeProfiles = Get-ChildItem -Path "C:\Users\$Username\AppData\Local\Google\Chrome\User Data" -Directory | Where-Object { $_.Name -eq "Default" -or $_.Name -match "^Profile \d+$" }
     $EVExtension = @()
 
     foreach ($ChromeProfile in $ChromeProfiles) {
-        $ExtensionsFolder = Get-ChildItem -Path $ChromeProfile.FullName | Where-Object { $_.Name -eq "Extensions" }
-        if ($ExtensionsFolder) {
-            $ExtensionsPath = Get-ChildItem -Path $ExtensionsFolder.FullName | Where-Object { $_.Name -eq $Variables.ExtensionID }
-            if ($ExtensionsPath) {
-                $EVExtension += $ExtensionsPath
-            }
+        $ExtensionsFolderPath = Join-Path $ChromeProfile.FullName "Extensions"
+        $ExtensionPath = Join-Path $ExtensionsFolderPath $Variables.ExtensionID
+        
+        if (Test-Path $ExtensionPath) {
+            $EVExtension += $ExtensionPath
         }
     }
 
@@ -184,11 +193,15 @@ else {
         $Summary += "Endpoint Verification extension is not installed"
     }
 }
+else {
+    Write-Message -Message  "Chrome is not installed. Skipping Endpoint Verification extension check" -Level "WARN"
+    $Summary += "Endpoint Verification extension is not installed"
+}
 
 #====================================================================================================#
 #                                     [ Firewall Status Check ]                                      #
 #====================================================================================================#
-Write-Message -Message "Starting Firewall Status check..." -Level "INFO"
+Write-Message -Message "========== Firewall Status Check ==========" -Level "INFO"
 
 $FirewallStatus = Get-NetFirewallProfile | Select-Object Name, Enabled
 
@@ -205,7 +218,7 @@ foreach ($NetProfile in $FirewallStatus) {
 #====================================================================================================#
 #                               [ Endpoint Verification Helper Check ]                               #
 #====================================================================================================#
-Write-Message -Message "Starting Endpoint Verification Helper check..." -Level "INFO"
+Write-Message -Message "========== Endpoint Verification Helper Check ==========" -Level "INFO"
 
 $EVHelperApp = Get-Package | Where-Object { $_.Name -like "*Google Endpoint Verification*" }
 
@@ -220,10 +233,10 @@ else {
 #====================================================================================================#
 #                                             [ Cleanup ]                                            #
 #====================================================================================================#
-Write-Message -Message "Cleaning up temporary files..." -Level "INFO"
+Write-Message -Message "========== Clean Up ==========" -Level "INFO"
 
+Write-Message -Message  "Deleting JSON file..." -Level "INFO"
 try {
-    Write-Message -Message  "Deleting JSON file..." -Level "INFO"           
     Remove-Item $JSONPath -Force
     Write-Message -Message  "JSON file deleted" -Level "NOTICE"     
 }
@@ -234,6 +247,9 @@ catch {
 #====================================================================================================#
 #                                       [ Compliance Summary ]                                       #
 #====================================================================================================#
+Write-Message -Message  "========== Summary ==========" -Level "INFO"
+Write-Message -Message  "Generating summary report..." -Level "INFO"
+
 if ($Summary.Count -eq 0) {
     $Message = @"
     All checks passed. Your device is compliant.
@@ -245,7 +261,7 @@ if ($Summary.Count -eq 0) {
       3. Click 'SYNC NOW'
       4. Reload your Gmail tab
 "@
-    Show-MessageBox -Message $Message -Title "Information" -Icon "Information"
+    Write-Message -Message $Message -Level "INFO" -Console $false -Log $false -Dialogue $true
 } 
 else {
     $SummaryText = ($Summary | ForEach-Object { "    - $_" }) -join "`n"
@@ -254,9 +270,9 @@ else {
 
 $SummaryText
 
-Please address each issue and then run the Endpoint Verification sync to regain access.
+Please address each issue, then run the Endpoint Verification sync to regain access.
 "@
-    Show-MessageBox -Message $Message -Title "Information" -Icon "Error"
+    Write-Message -Message $Message -Level "ERROR" -Console $false -Log $false -Dialogue $true
 }
 
 exit 0
