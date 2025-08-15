@@ -26,7 +26,7 @@ The `Fix` script includes both the scan and install scripts, as well as an addit
 
 ### **Option 1: Run Prebuilt Executable (Recommended)**
 
-1. Download the latest `ComplianceFix.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v1.0.0)
+1. Download the latest `ComplianceFix.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v2.0.0)
 2. Double-click to run the file. You will be prompted for the administrator credentials.
 3. If prompted with a security warning:
    - Click `More info`
@@ -87,3 +87,15 @@ Even if an error appears, the Helper app usually installs successfully. If you r
 
 ### Unknown Errors
 If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-ComplianceFix.log` to see the exact cause.
+
+## Attribution
+
+Icons provided by [FlatIcon](https://www.flaticon.com/)
+
+<a href="https://www.flaticon.com/free-icons/computer" title="computer icons">Computer icons created by Maxim Basinski Premium - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/magnifying-glass" title="magnifying glass icons">Magnifying glass icons created by Freepik - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/download" title="download icons">Download icons created by Picons - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/success" title="success icons">Success icons created by hqrloveq - Flaticon</a>
