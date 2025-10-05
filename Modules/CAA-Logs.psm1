@@ -73,4 +73,4 @@ function Write-Message {
     }
 }
 
-Export-ModuleMember -Function Set-LogFilePath, Write-Log, Show-MessageBox, Write-Message
+#Export-ModuleMember -Function Set-LogFilePath, Write-Log, Show-MessageBox, Write-Message
