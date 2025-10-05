@@ -2,31 +2,16 @@
 
 This PowerShell-based utility checks, and optionally fixes, your Windows device for compliance with Google Context-Aware Access (CAA) policies
 
-There are three included scripts:
-
-- **CAA-ComplianceFix.ps1**  
-  Full tool that checks and fixes issues. Requires admin privileges.
-  
-- **CAA-ComplianceScan.ps1**  
-  Scans and reports compliance without making changes. Does not require admin privileges.
-  
-- **Install-EVHelper.ps1**  
-  Checks for and installs the Google Endpoint Verification Helper if missing. Requires admin privileges.
-
-
-The `Fix` script includes both the scan and install scripts, as well as an additional firewall fix. The `Scan` script is best used for internally managed devices as it doesn't require admin rights to run.
-
 ## Prerequisites
 
-- The script must be run with **administrator privileges** to enable the built-in Administrator account on your system.
+- The script must be run with **administrator privileges** (unless you use the -ScanOnly switch) to enable the built-in Administrator account on your system.
 - The `ps1` file is compatible with Powershell 5 (Powershell 7+ is not supported due to `Get-Package` limitations).
-- This script currently does not support use over remote sessions
 
 ## Usage
 
 ### **Option 1: Run Prebuilt Executable (Recommended)**
 
-1. Download the latest `ComplianceFix.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v2.0.0)
+1. Download the latest `CAA-Tool.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v3.0.0)
 2. Double-click to run the file. You will be prompted for the administrator credentials.
 3. If prompted with a security warning:
    - Click `More info`
@@ -57,20 +42,18 @@ To run this script, you'll need to launch `PowerShell` or `Terminal` as an Admin
 
 Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window (Choose **one**):
 
-**CAA-ComplianceFix**
+**Full Tool**
 ```powershell
-irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-ComplianceFix.ps1" | iex
+iex "(irm 'https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-Tool.ps1')
 ```
 
-**CAA-ComplianceScan**
+Alternatively, if you just want to run the scan, pass the `-ScanOnly` switch
+
+**Scan Only**
 ```powershell
-irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-ComplianceScan.ps1" | iex
+iex "(irm 'https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-Tool.ps1') -ScanOnly"
 ```
 
-**Install-EVHelper**
-```powershell
-irm "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/Install-EVHelper.ps1" | iex
-```
 Hit `Enter` to run the command
 
 ###  Step 3: Fix Compliance Issues
@@ -97,7 +80,7 @@ If it throws an `Access Denied` error, while installing the MSI file, then it's 
 Even if an error appears, the Helper app usually installs successfully. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
 
 ### Unknown Errors
-If the script encounters any unexpected errors, check `C:\Windows\Temp\` and look for a `.log` file with the script's name. 
+If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-Tool.log` for a  
 
 ## Attribution
 
