@@ -1,6 +1,6 @@
 ######################################################################################################
 #                                                                                                    #
-#                                       CAA-ComplianceTool.ps1                                       #
+#                                            CAA-Tool.ps1                                            #
 #                                                                                                    #
 ######################################################################################################
 
@@ -8,10 +8,10 @@ param(
     [switch]$ScanOnly = $false
 )
 
+#region functions
 #====================================================================================================#
 #                                           [ Functions ]                                            #
 #====================================================================================================#
-#region functions
 function Test-IsAdmin {
     $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -24,35 +24,36 @@ if (-not $ScanOnly) {
     }
 }
 
-Import-Module C:\HC_Scripts\WIP\CAA_Compliance\Modules\CAA-Logs.psm1
-Import-Module C:\HC_Scripts\WIP\CAA_Compliance\Modules\CAA-Scan.psm1
-Import-Module C:\HC_Scripts\WIP\CAA_Compliance\Modules\CAA-Remediate.psm1
+$BaseURL = "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main"
 
-. C:\HC_Scripts\WIP\CAA_Compliance\Functions\Get-CurrentUser.ps1
+Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Logs.psm1")
+Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Scan.psm1")
+Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Remediate.psm1")
+Invoke-Expression (Invoke-RestMethod "$BaseURL/Functions/Get-CurrentUser.ps1")
 #endregion
 
+#region variables
 #====================================================================================================#
 #                                           [ Variables ]                                            #
 #====================================================================================================#
-#region variables
 $ErrorActionPreference = "Stop"
 $ProgressPreference = 'SilentlyContinue'
-$LogFilePath = "C:\Windows\Temp\CAA-ComplianceTool.log"
-Set-LogFilePath "C:\Windows\Temp\CAA-ComplianceTool.log"
+$LogFilePath = "C:\Windows\Temp\CAA-Tool.log"
+Set-LogFilePath "C:\Windows\Temp\CAA-Tool.log"
 $Summary = [System.Collections.Generic.List[string]]::new()
 $Username = Get-CurrentUser
 
 Add-Type -AssemblyName System.Windows.Forms
 #endregion
 
+#region JSON
 #====================================================================================================#
 #                                        [ Load JSON Config ]                                        #
 #====================================================================================================#
-#region JSON
 $JSONPath = "C:\Windows\Temp\caa.json"
 
 try {
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/dev/caa.json" -OutFile $JSONPath
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/caa.json" -OutFile $JSONPath
     $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 }
 catch {
@@ -61,25 +62,28 @@ catch {
 }
 #endregion
 
+#region Main
 #====================================================================================================#
 #                                           [ Main Logic ]                                           #
 #====================================================================================================#
 Set-Content -Path $LogFilePath -Encoding Unicode -Value "
 ##########################################################################
 #                                                                        #
-#                         CAA-ComplianceTool.ps1                         #
+#                              CAA-Tool.ps1                              #
 #                                                                        #
 ##########################################################################
 "
-# Windows Check
-#===================
+
+#region Windows Check
+#============================
 $WindowsBuildCheck = Get-WindowsBuild -BuildRequirements $Variables.BuildRequirements
 if ($WindowsBuildCheck.IsCompliant -eq $false) {
     $Summary.Add($WindowsBuildCheck.Message)
 }
+#endregion
 
-# Chrome Check
-#===================
+#region Chrome Check
+#============================
 $ChromeCheck = Get-ChromeStatus -ChromeVersion $Variables.ChromeVersion
 if ($ChromeCheck.IsCompliant -eq $false -and $ChromeCheck.Message -eq "Chrome is not installed") {
 
@@ -101,16 +105,18 @@ if ($ChromeCheck.IsCompliant -eq $false -and $ChromeCheck.Message -eq "Chrome is
 elseif ($ChromeCheck.IsCompliant -eq $false) {
     $Summary.Add($ChromeCheck.Message)
 }
+#endregion
 
-# Extension Check
-#===================
+#region Extension Check
+#============================
 $EVExtensionCheck = Get-EVExtensionStatus -Username $Username -ExtensionID $Variables.ExtensionID
 if ($EVExtensionCheck.IsCompliant -eq $false) {
     $Summary.Add($EVExtensionCheck.Message)
 }
+#endregion
 
-# Firewall Check
-#===================
+#region Firewall Check
+#============================
 $FirewallCheck = Get-FirewallStatus
 if (-not $FirewallCheck.IsCompliant) {
     if (-not $ScanOnly) {
@@ -137,9 +143,10 @@ if (-not $FirewallCheck.IsCompliant) {
         }
     }
 }
+#endregion
 
-# Helper App Check
-#===================
+#region EV Helper App Check
+#============================
 $EVHelperAppCheck = Get-EVHelperStatus
 if ($EVHelperAppCheck.IsCompliant -eq $false) {
     
@@ -158,7 +165,9 @@ if ($EVHelperAppCheck.IsCompliant -eq $false) {
         $Summary.Add($EVHelperAppCheck.Message)
     }
 }
+#endregion
 
+#region Cleanup
 #====================================================================================================#
 #                                             [ Cleanup ]                                            #
 #====================================================================================================#
@@ -172,7 +181,9 @@ try {
 catch {
     Write-Message -Message  "Failed to delete JSON file: $($_.Exception.Message)" -Level "WARN"
 }
+#endregion
 
+#region Summary
 #====================================================================================================#
 #                                       [ Compliance Summary ]                                       #
 #====================================================================================================#
@@ -205,3 +216,6 @@ Please address each issue, then run the Endpoint Verification sync to regain acc
 }
 
 exit 0
+#endregion
+
+#endregion
