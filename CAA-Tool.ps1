@@ -24,7 +24,7 @@ if (-not $ScanOnly) {
     }
 }
 
-$BaseURL = "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main"
+$BaseURL = "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/feature/modular-script"
 
 Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Logs.psm1")
 Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Scan.psm1")
@@ -53,7 +53,7 @@ Add-Type -AssemblyName System.Windows.Forms
 $JSONPath = "C:\Windows\Temp\caa.json"
 
 try {
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/caa.json" -OutFile $JSONPath
+    Invoke-WebRequest -Uri "$BaseURL/caa.json" -OutFile $JSONPath
     $Variables = Get-Content -Raw -Path $JSONPath | ConvertFrom-Json
 }
 catch {
