@@ -57,11 +57,29 @@ function Write-Message {
         [bool]$Console = $true,
         [bool]$Log = $true,
         [bool]$Dialogue = $false,
-        [string]$DialogueTitle = "CAA Compliance Fix"
+        [string]$DialogueTitle = "CAA Compliance Fix",
+        [System.ConsoleColor]$ForegroundColor = $null        
     )
 
-    if ($Console) { Write-Host "[$Level] $Message" }
-    if ($Log) { Write-Log -Level $Level -Message $Message }
+    if ($Console) { 
+        if ($ForegroundColor) {
+            Write-Host "[$Level] $Message" -ForegroundColor $ForegroundColor
+        } else {
+            # fallback colors based on level
+            $color = switch ($Level) {
+                "INFO"   { "White" }
+                "NOTICE" { "Cyan" }
+                "WARN"   { "Yellow" }
+                "ERROR"  { "Red" }
+            }
+            Write-Host "[$Level] $Message" -ForegroundColor $color
+        }
+    }
+
+    if ($Log) { 
+        Write-Log -Level $Level -Message $Message 
+    }
+    
     if ($Dialogue) {
         $icon = switch ($Level) {
             "INFO"   { "Information" }
@@ -72,5 +90,3 @@ function Write-Message {
         Show-MessageBox -Message $Message -Title $DialogueTitle -Icon $icon
     }
 }
-
-#Export-ModuleMember -Function Set-LogFilePath, Write-Log, Show-MessageBox, Write-Message

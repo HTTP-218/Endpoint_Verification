@@ -176,7 +176,7 @@ Write-Message -Message "========== Clean Up ==========" -Level "INFO"
 Write-Message -Message  "Deleting JSON file..." -Level "INFO"
 try {
     Remove-Item $JSONPath -Force
-    Write-Message -Message  "JSON file deleted" -Level "NOTICE"     
+    Write-Message -Message  "JSON file deleted" -Level "NOTICE"
 }
 catch {
     Write-Message -Message  "Failed to delete JSON file: $($_.Exception.Message)" -Level "WARN"

@@ -24,7 +24,7 @@ function Install-GoogleChrome {
     Write-Message -Message "Installing Google Chrome..." -Level "INFO"
     try {
         Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$ChromePath`"" -wait
-        Write-Message -Message "Google Chrome has been installed" -Level "NOTICE" -Dialogue $true
+        Write-Message -Message "Google Chrome has been installed" -Level "NOTICE" -Dialogue $true -ForegroundColor Green
     }
     catch {
         Write-Message -Message "Failed to install Google Chrome`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
@@ -60,7 +60,7 @@ function Enable-FirewallProfiles {
     foreach ($ProfileName in $Profiles) {
         try {
             Set-NetFirewallProfile -Name $ProfileName -Enabled True
-            Write-Message -Message "$ProfileName firewall profile has been enabled" -Level "NOTICE" -Dialogue $true
+            Write-Message -Message "$ProfileName firewall profile has been enabled" -Level "NOTICE" -Dialogue $true -ForegroundColor Green
         }
         catch {
             Write-Message -Message "Failed to enable the $ProfileName firewall profile`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
@@ -126,7 +126,7 @@ function Install-EVHelperApp {
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
     try {            
         Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
-        Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE"
+        Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE" -ForegroundColor Green
     }
     catch {
         Write-Message -Message  "Installation failed!`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
@@ -150,5 +150,5 @@ function Install-EVHelperApp {
         Write-Message -Message  "Builtin administrator account disabled" -Level "NOTICE"
     }
 
-    Write-Message -Message "Google Endpoint Verification has been installed" -Level "NOTICE" -Dialogue $true 
+    Write-Message -Message "Google Endpoint Verification has been installed" -Level "NOTICE" -Dialogue $true -ForegroundColor Green
 }
