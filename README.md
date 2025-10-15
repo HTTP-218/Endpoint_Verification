@@ -78,7 +78,7 @@ Run the `ps1` or `exe` file again to check that everything is compliant.
 If the summary complains about Chrome or the Helper app not being installed, even though they are, then it's likely you ran the script in Powershell 7, instead of Powershell 5. Powershell 7 no longer grabs a list of installed packages though `Get-Package`. 
 
 ### Unknown Errors
-If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-Tool.log`  
+If the script encounters any unexpected errors, check `%localappdata%\Temp\CAA-Tool.log`  
 
 ## Attribution
 
