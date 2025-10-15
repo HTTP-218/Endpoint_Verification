@@ -11,7 +11,7 @@ This PowerShell-based utility checks, and optionally fixes, your Windows device 
 
 ### **Option 1: Run Prebuilt Executable (Recommended)**
 
-1. Download the latest `CAA-Tool.exe` file from the [Releases Page](https://github.com/2mmkolibri/Endpoint_Verification/releases/tag/v3.0.0)
+1. Download the latest `CAA-Tool.exe` file from the [Releases Page](https://github.com/HTTP-218/Endpoint_Verification/releases/tag/v1.0.0)
 2. Double-click to run the file. You will be prompted for the administrator credentials.
 3. If prompted with a security warning:
    - Click `More info`
@@ -75,12 +75,10 @@ Run the `ps1` or `exe` file again to check that everything is compliant.
 ## Troubleshooting
 
 ### Access Denied
-If it throws an `Access Denied` error, while installing the MSI file, then it's likely you ran the `ps1` file in a non-admin powershell session.
-
-Even if an error appears, the Helper app usually installs successfully. If you run the script again, it will tell you that the app is already installed. Proceed with the remaining steps listed above.
+If the summary complains about Chrome or the Helper app not being installed, even though they are, then it's likely you ran the script in Powershell 7, instead of Powershell 5. Powershell 7 no longer grabs a list of installed packages though `Get-Package`. 
 
 ### Unknown Errors
-If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-Tool.log` for a  
+If the script encounters any unexpected errors, check `C:\Windows\Temp\CAA-Tool.log`  
 
 ## Attribution
 
