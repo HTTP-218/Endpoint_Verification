@@ -1,7 +1,7 @@
 function Install-GoogleChrome {
 
     $ChromeURL = "https://dl.google.com/tag/s/dl/chrome/install/googlechromestandaloneenterprise64.msi"
-    $ChromePath = "C:\Windows\Temp\googlechromestandaloneenterprise64.msi"
+    $ChromePath = Join-Path $env:TEMP "googlechromestandaloneenterprise64.msi"
     
     Write-Message -Message "Checking if Chrome MSI file is present..." -Level "INFO"
 
@@ -72,7 +72,7 @@ function Enable-FirewallProfiles {
 
 function Install-EVHelperApp {
 
-    $EVHelperPath = "C:\Windows\Temp\EndpointVerification_admin.msi"
+    $EVHelperPath = Join-Path $env:TEMP "EndpointVerification_admin.msi"
     $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'
 
     Write-Message -Message "Checking if Endpoint Verification Helper MSI file is present..." -Level "INFO"
