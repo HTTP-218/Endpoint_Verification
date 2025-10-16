@@ -6,16 +6,32 @@ $PS5Path  = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 $ToolPath = Join-Path $env:TEMP "CAA-Tool.ps1"
 Invoke-RestMethod $RepoURL -OutFile $ToolPath 
 
-Write-Host ""
-Write-Host "##############################################################" -ForegroundColor Cyan
-Write-Host "#                          HTTP 218                          #" -ForegroundColor Cyan
-Write-Host "#                        CAA-Tool.ps1                        #" -ForegroundColor Cyan
-Write-Host "##############################################################" -ForegroundColor Cyan   
-Write-Host ""
+$asciiBanner = @"
+
+
+                ██╗  ██╗████████╗████████╗██████╗       ██████╗  ██╗ █████╗          
+                ██║  ██║╚══██╔══╝╚══██╔══╝██╔══██╗      ╚════██╗███║██╔══██╗         
+                ███████║   ██║      ██║   ██████╔╝█████╗ █████╔╝╚██║╚█████╔╝         
+                ██╔══██║   ██║      ██║   ██╔═══╝ ╚════╝██╔═══╝  ██║██╔══██╗         
+                ██║  ██║   ██║      ██║   ██║           ███████╗ ██║╚█████╔╝         
+                ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚═╝           ╚══════╝ ╚═╝ ╚════╝          
+                                                                                     
+ ██████╗ █████╗  █████╗    ████████╗ ██████╗  ██████╗ ██╗        ██████╗ ███████╗ ██╗
+██╔════╝██╔══██╗██╔══██╗   ╚══██╔══╝██╔═══██╗██╔═══██╗██║        ██╔══██╗██╔════╝███║
+██║     ███████║███████║█████╗██║   ██║   ██║██║   ██║██║        ██████╔╝███████╗╚██║
+██║     ██╔══██║██╔══██║╚════╝██║   ██║   ██║██║   ██║██║        ██╔═══╝ ╚════██║ ██║
+╚██████╗██║  ██║██║  ██║      ██║   ╚██████╔╝╚██████╔╝███████╗██╗██║     ███████║ ██║
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝      ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝╚═╝╚═╝     ╚══════╝ ╚═╝
+
+
+"@
+Write-Host $asciiBanner -ForegroundColor DarkYellow
+
 Write-Host "[1] Scan Only (No admin required)" -ForegroundColor Green
 Write-Host "[2] Full Tool (Requires admin privileges)" -ForegroundColor Yellow
 Write-Host "[0] Exit"
 Write-Host ""
+
 $Choice = Read-Host "Enter a number"
 Write-Host ""
 
