@@ -58,7 +58,7 @@ function Write-Message {
         [bool]$Log = $true,
         [bool]$Dialogue = $false,
         [string]$DialogueTitle = "CAA Compliance Fix",
-        [System.ConsoleColor]$ForegroundColor = $null        
+        [System.ConsoleColor]$ForegroundColor     
     )
 
     if ($Console) { 
