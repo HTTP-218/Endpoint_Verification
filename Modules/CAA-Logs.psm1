@@ -57,7 +57,7 @@ function Write-Message {
         [bool]$Console = $true,
         [bool]$Log = $true,
         [bool]$Dialogue = $false,
-        [string]$DialogueTitle = "CAA Compliance Fix",
+        [string]$DialogueTitle = "CAA-Tool",
         [System.ConsoleColor]$ForegroundColor     
     )
 
