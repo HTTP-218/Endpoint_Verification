@@ -3,6 +3,8 @@
 #==============================================================#
 $RepoURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/dev/CAA-Tool.ps1"
 $PS5Path  = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+$ToolPath = Join-Path $env:TEMP "CAA-Tool.ps1"
+Invoke-RestMethod $RepoURL -OutFile $ToolPath 
 
 Write-Host ""
 Write-Host "##############################################################" -ForegroundColor Cyan
@@ -20,15 +22,15 @@ Write-Host ""
 switch ($Choice) {
     "1" {
         Write-Host "[INFO] Launching Scan Only mode..." -ForegroundColor Green
-        $Command = "Invoke-RestMethod $RepoURL | .\CAA-Tool -ScanOnly"
-        Start-Process $PS5Path -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $Command -WindowStyle Normal
-        return
+        $Command = "-Command & '$ToolPath' -ScanOnly"
+        $Process = Start-Process $PS5Path -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", $Command -WindowStyle Normal -PassThru
+        $Process.WaitForExit()
+        Remove-Item $ToolPath -Force
     }
     "2" {
         Write-Host "[INFO] Launching Full Tool (requires elevation)..." -ForegroundColor Yellow
         try {
-            $Command = "Invoke-RestMethod $RepoURL | Invoke-Expression"
-            Start-Process $PS5Path -Verb RunAs -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $Command -WindowStyle Normal
+            Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "Invoke-RestMethod $RepoURL | Invoke-Expression" -WindowStyle Normal
         }
         catch {
             Write-Host "[ERROR] Could not launch elevated PowerShell. UAC prompt was likely cancelled." -ForegroundColor Red
