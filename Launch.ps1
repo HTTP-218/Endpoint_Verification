@@ -2,6 +2,7 @@
 #                  CAA-Launcher.ps1 (menu)                     #
 #==============================================================#
 $RepoURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/dev/CAA-Tool.ps1"
+$PS5Path  = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 
 Write-Host ""
 Write-Host "##############################################################" -ForegroundColor Cyan
@@ -19,14 +20,15 @@ Write-Host ""
 switch ($Choice) {
     "1" {
         Write-Host "[INFO] Launching Scan Only mode..." -ForegroundColor Green
-        $Command = Invoke-Expression "& { $(Invoke-RestMethod $RepoURL) } -ScanOnly"
-        Start-Process powershell -ArgumentList "-NoExit -ExecutionPolicy Bypass -Command $Command" -WindowStyle Normal
+        $Command = "Invoke-RestMethod $RepoURL | .\CAA-Tool -ScanOnly"
+        Start-Process $PS5Path -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $Command -WindowStyle Normal
         return
     }
     "2" {
         Write-Host "[INFO] Launching Full Tool (requires elevation)..." -ForegroundColor Yellow
         try {
-            Start-Process powershell -Verb RunAs -ArgumentList "Invoke-RestMethod $RepoURL | Invoke-Expression" -WindowStyle Normal
+            $Command = "Invoke-RestMethod $RepoURL | Invoke-Expression"
+            Start-Process $PS5Path -Verb RunAs -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $Command -WindowStyle Normal
         }
         catch {
             Write-Host "[ERROR] Could not launch elevated PowerShell. UAC prompt was likely cancelled." -ForegroundColor Red
