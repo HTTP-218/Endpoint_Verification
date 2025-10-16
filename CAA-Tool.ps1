@@ -19,13 +19,13 @@ function Test-IsAdmin {
 
 if (-not $ScanOnly) {
     if (-not (Test-IsAdmin)) {
-        Write-Host "[ERROR] This script requires admin rights for remediation. Please run PowerShell as Administrator."
-        Read-Host "Press Enter to exit..."
+        Write-Host "[ERROR] This script requires admin rights for remediation. Please run PowerShell as Administrator." -ForegroundColor Red
+        Read-Host "Press any key to exit"
         exit 1
     }
 }
 
-$BaseURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/main"
+$BaseURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/dev"
 
 Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Logs.psm1")
 Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Scan.psm1")
