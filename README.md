@@ -1,70 +1,68 @@
 # CAA Compliance Tool for Google Workspace
 
-This PowerShell-based utility checks, and optionally fixes, your Windows device for compliance with Google Context-Aware Access (CAA) policies
+This PowerShell-based utility checks, and optionally fixes, your Windows device for compliance with Google Context-Aware Access (CAA) policies.
 
 ## Prerequisites
 
-- The script must be run with **administrator privileges** (unless you use the -ScanOnly switch) to enable the built-in Administrator account on your system.
-- The `ps1` file is compatible with Powershell 5 (Powershell 7+ is not supported due to `Get-Package` limitations).
+- The script is only compatible with `Powershell 5` and above
 
 ## Usage
 
-### **Option 1: Run Prebuilt Executable (Recommended)**
+### Step 1: Open PowerShell
 
-1. Download the latest `CAA-Tool.exe` file from the [Releases Page](https://github.com/HTTP-218/Endpoint_Verification/releases/tag/v1.0.0)
-2. Double-click to run the file. You will be prompted for the administrator credentials.
-3. If prompted with a security warning:
-   - Click `More info`
-   - Then click `Run anyway`
-
-```fix
-NOTE: If you are running a 3rd party Antivirus, disable it and run the script again. The AV will incorrectly identify the exe as malware
-```
-
-### **Option 2: Run Script Manually**
-
-### Step 1: Open PowerShell with Administrator Privileges
-
-To run this script, you'll need to launch `PowerShell` or `Terminal` as an Administrator. Here are two ways to do that:
+To run this tool, you'll need to launch `PowerShell` or `Terminal`. Here are two ways to do that:
 
 **Method 1: Start Menu**
 
 1. Right-click on the `Start Menu` (Windows icon).
-2. Select **`Windows PowerShell (Admin)`** (for Windows 10) or **`Terminal (Admin)`** (for Windows 11).
+2. Select **`Windows PowerShell`** (for Windows 10) or **`Terminal`** (for Windows 11).
 
 **Method 2: Search and Launch**
 
 1. Press the `Windows key`.
 2. Type `PowerShell` (for Windows 10 or 11) or `Terminal` (for Windows 11).
-3. Press `Ctrl + Shift + Enter` or right-click the app and choose **`Run as administrator`** to launch it with administrator privileges.
 
 ### Step 2: Download and Run Script
 
-Once you have PowerShell or Terminal open with administrator privileges, copy and paste the following command into the window (Choose **one**):
+Once you have PowerShell or Terminal open, copy and paste the following command into the window:
 
-**Full Tool**
 ```powershell
-irm 'https://http-218.github.io/CAA-Tool.ps1' | iex
-```
-
-Alternatively, if you just want to run the scan, pass the `-ScanOnly` switch
-
-**Scan Only**
-```powershell
-iex "& { $(irm https://http-218.github.io/CAA-Tool.ps1) } -ScanOnly"
+irm 'https://http-218.github.io/Launch.ps1' | iex
 ```
 
 Hit `Enter` to run the command
 
-###  Step 3: Fix Compliance Issues
+### Step 3: Choose an Option
+
+You will have 2 options: `Scan` and `Full Tool`
+
+**Scan**
+
+This option will check all the required attributes of your device, to make sure it's compliant with the CAA policies. \
+Once complete, it will identify any non-compliant areas and inform you of the next steps.
+
+**Full Tool**
+
+This option will perform the scan first, then will prompt to fix any non-compliant issues.
+
+```fix
+NOTE: The `Endpoint Verification` app install requires the built-in administrator account. You will be asked for a password.
+```
+
+>If the account is detected as *disabled*, it will **set a new password**.
+
+>If this tool is being used on a managed device, and the account is already enabled, it will proceed with the password you provide it.
+
+
+###  Step 4: Fix Compliance Issues
 
 - If Windows is not compliant, you will need to download the latest Windows ISO and upgrade your version. You can use [this YouTube guide](https://youtu.be/dofyWO7msDA?t=689).
 - If Chrome is not compliant, open a new tab and go to [chrome://settings/help](chrome://settings/help). Chrome will check for updates and will prompt you to relaunch the browser to apply them.
 - If the Endpoint Verification extension is missing, install it from [here](https://chromewebstore.google.com/detail/endpoint-verification/callobklhcbilhphinckomhgkigmfocg).
 
-Run the `ps1` or `exe` file again to check that everything is compliant.
+Run the tool again to check that everything is compliant.
 
-### Step 4: Sync Device Details
+### Step 5: Sync Device Details
 
 1. Open `Google Chrome` and choose your work profile.
 2. Locate and click `Extensions` (puzzle piece icon in the top right corner of Chrome).
@@ -74,11 +72,19 @@ Run the `ps1` or `exe` file again to check that everything is compliant.
 
 ## Troubleshooting
 
-### Access Denied
-If the summary complains about Chrome or the Helper app not being installed, even though they are, then it's likely you ran the script in Powershell 7, instead of Powershell 5. Powershell 7 no longer grabs a list of installed packages though `Get-Package`. 
+### Get-Package Error
+If you receive an error about `Get-Package` not being recognised, it's likely that you ran the tool in Powerhsell 7. \
+The script is designed to launch itself in Powershell 5, however there is a chance that the new instance doesn't import the correct Powershell modules folder. \
+
+Launch `Windows Powershell` (Powershell 5) and run the tool again.
+
+### Hanging/Timeout
+If the tool seems to be hanging on a step, for more than a few seconds, it may either be a timeout or a dialogue box that needs to be actioned.
+1. Check if there is a dialogue box hidden behind the other open windows
+2. If there are no dialogue boxes, hit `Ctrl + C` to terminate the script. This can force it to continue with the remaining steps.
 
 ### Unknown Errors
-If the script encounters any unexpected errors, check `%localappdata%\Temp\CAA-Tool.log`  
+If the tool encounters any unexpected errors, check `%localappdata%\Temp\CAA-Tool.log`  
 
 ## Attribution
 
