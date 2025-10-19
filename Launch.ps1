@@ -1,6 +1,9 @@
-#==============================================================#
-#                  CAA-Launcher.ps1 (menu)                     #
-#==============================================================#
+######################################################################################################
+#                                                                                                    #
+#                                             Launch.ps1                                             #
+#                                                                                                    #
+######################################################################################################
+
 $RepoURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/main/CAA-Tool.ps1"
 $PS5Path  = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 $ToolPath = Join-Path $env:TEMP "CAA-Tool.ps1"
@@ -33,7 +36,6 @@ switch ($Choice) {
         Write-Host "[INFO] Launching Scan Only mode..." -ForegroundColor Green
         & $PS5Path -NoExit -ExecutionPolicy Bypass -File $ToolPath -ScanOnly
         Remove-Item $ToolPath -Force
-        #exit 0
     }
     "2" {
         Write-Host "[INFO] Launching Full Tool (requires elevation)..." -ForegroundColor Yellow
