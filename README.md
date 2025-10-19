@@ -46,12 +46,12 @@ Once complete, it will identify any non-compliant areas and inform you of the ne
 This option will perform the scan first, then will prompt to fix any non-compliant issues.
 
 ```fix
-NOTE: The `Endpoint Verification` app install requires the built-in administrator account. You will be asked for a password.
+NOTE: The Endpoint Verification app install requires the built-in administrator account. You will be asked for a password.
 ```
 
->If the account is detected as *disabled*, it will **set a new password**.
+If the account is detected as *disabled*, it will **set a new password**.
 
->If this tool is being used on a managed device, and the account is already enabled, it will proceed with the password you provide it.
+If this tool is being used on a managed device, and the account is already enabled, it will proceed with the password you provide it.
 
 
 ###  Step 4: Fix Compliance Issues
@@ -74,7 +74,7 @@ Run the tool again to check that everything is compliant.
 
 ### Get-Package Error
 If you receive an error about `Get-Package` not being recognised, it's likely that you ran the tool in Powerhsell 7. \
-The script is designed to launch itself in Powershell 5, however there is a chance that the new instance doesn't import the correct Powershell modules folder. \
+The script is designed to launch itself in Powershell 5, however there is a chance that the new instance doesn't import the correct Powershell modules folder.
 
 Launch `Windows Powershell` (Powershell 5) and run the tool again.
 
