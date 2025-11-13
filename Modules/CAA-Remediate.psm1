@@ -92,25 +92,49 @@ function Install-EVHelperApp {
     }
 
     # Built-in admin account is needed to install the MSI package
-    Write-Message -Message "Prompting for builtin administrator credentials..." -Level "INFO"
-    $AdminCred = Get-Credential -UserName "administrator" -Message "Enter or set the local admin credentials."
-        
-    if ($null -eq $AdminCred) {
-        Write-Message -Message "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue." -Level "ERROR" -Dialogue $true
-        exit 1
-    }
-
     Write-Message -Message "Checking if builtin administrator account is enabled..." -Level "INFO"
-    $BuiltinAdmin = Get-LocalUser -Name "Administrator"
+    $BuiltinAdmin = Get-LocalUser -Name "Administrator"   
 
-    if (!$BuiltinAdmin.Enabled) {
-        Write-Message -Message "Account is disabled. Enabling..." -Level "INFO"
+    $AdminCred = $null
+
+    if ($BuiltinAdmin.Enabled) {
+        Write-Message -Message "Built-in Administrator account is already enabled." -Level "INFO"
+    
+        # Prompt for credentials to use existing password
+        Write-Message -Message "Prompting for builtin administrator credentials..." -Level "INFO"
+        $AdminCred = Get-Credential -UserName "Administrator" -Message "Enter the existing local Administrator credentials."
+    
+        if ($null -eq $AdminCred) {
+            Write-Message -Message "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue." -Level "ERROR" -Dialogue $true
+            exit 1
+         }
+
+         Write-Message -Message "Using provided Administrator credentials." -Level "NOTICE"
+    }
+    else {
+        Write-Message -Message "Built-in Administrator account is disabled." -Level "WARN"
+
+        $UserResponse = Show-MessageBox -Message "The built-in Administrator account is disabled.`n`nTo continue, it must be enabled and a new password set.`n`n Would you like to proceed?" `
+        -Title "Enable Administrator Account" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
+
+        if ($UserResponse -ne [System.Windows.Forms.DialogResult]::Yes) {
+            Write-Message -Message "User cancelled enabling Administrator account." -Level "NOTICE"
+            exit 1
+        }
+
         try {
             Enable-LocalUser -Name "Administrator"
             Write-Message -Message "Builtin administrator account enabled" -Level "NOTICE"
 
-            Set-LocalUser -Name "Administrator" -Password $AdminCred.Password
-            Write-Message -Message "Administrator password updated" -Level "NOTICE"
+            if ($null -eq $AdminCred) {
+                Write-Message -Message "Password not provided. Aborting." -Level "ERROR" -Dialogue $true
+                Disable-LocalUser -Name "Administrator"
+                exit 1
+            }
+            else {
+                Set-LocalUser -Name "Administrator" -Password $AdminCred.Password
+                Write-Message -Message "Administrator password updated" -Level "NOTICE"
+            }
 
             $SetByScript = 1
         }
@@ -118,9 +142,6 @@ function Install-EVHelperApp {
             Write-Message -Message "Failed to activate builtin administrator account`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
             exit 1
         }
-    }
-    else {
-        Write-Message -Message  "Account is already enabled" -Level "INFO"
     }
 
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
