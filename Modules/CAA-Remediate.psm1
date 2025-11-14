@@ -148,7 +148,6 @@ function Install-EVHelperApp {
     }
 
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
-    #$MSIArgs = "/i `"$EVHelperPath`" /qn /norestart"
 
     try {
         $Process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i", "`"$EVHelperPath`"", "/qn", "/norestart" -Credential $AdminCred -Wait -PassThru
@@ -157,7 +156,8 @@ function Install-EVHelperApp {
             Write-Message -Message "Endpoint Verification Helper installed successfully." -Level "NOTICE" -ForegroundColor Green
         }
         else {
-            Write-Message -Message "Installation failed!`n`n`MSI exit code:`n`n$($Process.ExitCode)" -Level "ERROR" -Dialogue $true
+            Write-Message -Message "Installation failed!`n`n`MSI exit code: $($Process.ExitCode)`n`nThis is likely due to security policies enforced on this device." -Level "ERROR" -Dialogue $true
+            Write-Message -Message "Please visit this page for troubleshooting steps:`n`nhttps://github.com/HTTP-218/Endpoint_Verification?tab=readme-ov-file#troubleshooting" -Level "ERROR" -Dialogue $true
             exit 1
         }
     }
