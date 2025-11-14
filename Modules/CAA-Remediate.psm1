@@ -148,10 +148,10 @@ function Install-EVHelperApp {
     }
 
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
-    $MSIArgs = "/i `"$EVHelperPath`" /qn /norestart"
+    #$MSIArgs = "/i `"$EVHelperPath`" /qn /norestart"
 
     try {
-        $Process = Start-Process -FilePath "msiexec.exe" -ArgumentList $MSIArgs -Credential $AdminCred -Wait -PassThru
+        $Process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`" /qn /norestart" -Credential $AdminCred -Wait -PassThru
 
         if ($Process.ExitCode -eq 0) {
             Write-Message -Message "Endpoint Verification Helper installed successfully." -Level "NOTICE" -ForegroundColor Green
