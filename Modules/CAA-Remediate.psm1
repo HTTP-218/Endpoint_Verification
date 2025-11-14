@@ -148,6 +148,8 @@ function Install-EVHelperApp {
     }
 
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
+    $MSIArgs = "/i `"$EVHelperPath`" /qn /norestart"
+
     try {
         $Process = Start-Process -FilePath "msiexec.exe" -ArgumentList $MSIArgs -Credential $AdminCred -Wait -PassThru
 
