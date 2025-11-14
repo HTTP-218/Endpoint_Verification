@@ -81,7 +81,7 @@ To install the package manually:
 1. Log into the Administrator account
 2. Download the [MSI]('https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi) file
 3. Install the package
-4. Run the Endpoint Verification sync explained in [Step 5](#Step-5:-Sync-Device-Details)
+4. Run the Endpoint Verification sync explained in [Step 5](#step-5-sync-device-details)
 
 ### Get-Package Error
 If you receive an error about `Get-Package` not being recognised, it's likely that you ran the tool in Powerhsell 7. \
