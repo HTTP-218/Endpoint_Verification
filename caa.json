@@ -3,18 +3,21 @@
         {
             "MinBuild": 19045,
             "MaxBuild": 19045,
-            "Label": "Windows 10 22H2"
+            "Label": "Windows 10 22H2",
+            "EOL": true
         },
         {
             "MinBuild": 22631,
             "MaxBuild": 26099,
-            "Label": "Windows 11 23H2"
+            "Label": "Windows 11 23H2",
+            "EOL": true
         },
         {
             "MinBuild": 26100,
-            "Label": "Windows 11 24H2 or later"
+            "Label": "Windows 11 24H2 or later",
+            "EOL": false
         }
     ],
-    "ChromeVersion": "140.0.7339.41",
+    "ChromeVersion": "142.0.7444",
     "ExtensionID": "callobklhcbilhphinckomhgkigmfocg"
 }
