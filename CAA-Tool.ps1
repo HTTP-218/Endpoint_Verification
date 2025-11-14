@@ -217,6 +217,7 @@ Please address each issue, then run the Endpoint Verification sync to regain acc
 }
 
 Start-Sleep -Seconds 1
+return
 
 #endregion
 
