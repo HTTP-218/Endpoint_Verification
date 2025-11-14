@@ -148,12 +148,19 @@ function Install-EVHelperApp {
     }
 
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
-    try {            
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
-        Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE" -ForegroundColor Green
+    try {
+        $Process = Start-Process -FilePath "msiexec.exe" -ArgumentList $MSIArgs -Credential $AdminCred -Wait -PassThru
+
+        if ($Process.ExitCode -eq 0) {
+            Write-Message -Message "Endpoint Verification Helper installed successfully." -Level "NOTICE" -ForegroundColor Green
+        }
+        else {
+            Write-Message -Message "Installation failed!`n`n`MSI exit code:`n`n$($Process.ExitCode)" -Level "ERROR" -Dialogue $true
+            exit 1
+        }
     }
     catch {
-        Write-Message -Message  "Installation failed!`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+        Write-Message -Message  "Failed to start MSI installation process:`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
         exit 1
     }
 
