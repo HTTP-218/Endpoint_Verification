@@ -55,8 +55,6 @@ while ($true) {
             exit 0
         }
         default {
-            #Write-Host "[ERROR] Invalid selection. Please choose a valid option." -ForegroundColor Red
-            #Read-Host "Press any key to continue"
             break
         }
     }
