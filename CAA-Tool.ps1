@@ -216,7 +216,8 @@ Please address each issue, then run the Endpoint Verification sync to regain acc
     Write-Message -Message $Message -Level "ERROR" -Console $false -Log $false -Dialogue $true
 }
 
-exit 0
+[System.Environment]::Exit(0)
+
 #endregion
 
 #endregion

@@ -72,6 +72,17 @@ Run the tool again to check that everything is compliant.
 
 ## Troubleshooting
 
+### EVHelper MSI Installation Failed | MSI exit code 1619
+If you receive the error "Installation Failed...MSI Exit code 1619", then it is likely you are running the script on a corporate device that has additional security policies in place.
+
+To install the Endpoint Verification MSI package, Google forces the use of the Built-in Administrator account. This tool uses `Start-Process` with the `-Credential` switch to impersonate the administrator account, to install the package.
+
+To install the package manually:
+1. Log into the Administrator account
+2. Download the [MSI]('https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi) file
+3. Install the package
+4. Run the Endpoint Verification sync explained in [Step 5](#step-5-sync-device-details)
+
 ### Get-Package Error
 If you receive an error about `Get-Package` not being recognised, it's likely that you ran the tool in Powerhsell 7. \
 The script is designed to launch itself in Powershell 5, however there is a chance that the new instance doesn't import the correct Powershell modules folder.
@@ -81,10 +92,7 @@ Launch `Windows Powershell` (Powershell 5) and run the tool again.
 ### Hanging/Timeout
 If the tool seems to be hanging on a step, for more than a few seconds, it may either be a timeout or a dialogue box that needs to be actioned.
 1. Check if there is a dialogue box hidden behind the other open windows
-2. If there are no dialogue boxes, hit `Ctrl + C` to terminate the script. This can force it to continue with the remaining steps.
-
-### Unknown Errors
-If the tool encounters any unexpected errors, check `%localappdata%\Temp\CAA-Tool.log`  
+2. If there are no dialogue boxes, hit `Ctrl + C` to terminate the script. This can force it to continue with the remaining steps. 
 
 ## Attribution
 

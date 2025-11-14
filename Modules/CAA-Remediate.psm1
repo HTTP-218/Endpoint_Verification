@@ -92,25 +92,52 @@ function Install-EVHelperApp {
     }
 
     # Built-in admin account is needed to install the MSI package
-    Write-Message -Message "Prompting for builtin administrator credentials..." -Level "INFO"
-    $AdminCred = Get-Credential -UserName "administrator" -Message "Enter or set the local admin credentials."
-        
-    if ($null -eq $AdminCred) {
-        Write-Message -Message "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue." -Level "ERROR" -Dialogue $true
-        exit 1
-    }
-
     Write-Message -Message "Checking if builtin administrator account is enabled..." -Level "INFO"
-    $BuiltinAdmin = Get-LocalUser -Name "Administrator"
+    $BuiltinAdmin = Get-LocalUser -Name "Administrator"   
 
-    if (!$BuiltinAdmin.Enabled) {
-        Write-Message -Message "Account is disabled. Enabling..." -Level "INFO"
+    $AdminCred = $null
+
+    if ($BuiltinAdmin.Enabled) {
+        Write-Message -Message "Built-in Administrator account is already enabled." -Level "INFO"
+    
+        # Prompt for credentials to use existing password
+        Write-Message -Message "Prompting for builtin administrator credentials..." -Level "INFO"
+        $AdminCred = Get-Credential -UserName "Administrator" -Message "Enter the existing local Administrator credentials."
+    
+        if ($null -eq $AdminCred) {
+            Write-Message -Message "Username or Password cannot be empty.`n`nPlease enter the admin credentials to continue." -Level "ERROR" -Dialogue $true
+            exit 1
+         }
+
+         Write-Message -Message "Using provided Administrator credentials." -Level "NOTICE"
+    }
+    else {
+        Write-Message -Message "Built-in Administrator account is disabled." -Level "WARN"
+
+        $UserResponse = Show-MessageBox -Message "The built-in Administrator account is disabled.`n`nTo continue, it must be enabled and a new password set.`n`n Would you like to proceed?" `
+        -Title "Enable Administrator Account" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
+
+        if ($UserResponse -ne [System.Windows.Forms.DialogResult]::Yes) {
+            Write-Message -Message "User cancelled enabling Administrator account." -Level "NOTICE"
+            exit 1
+        }
+        else {
+            $AdminCred = Get-Credential -UserName "Administrator" -Message "Enter a new password for the account."
+        }
+
         try {
             Enable-LocalUser -Name "Administrator"
             Write-Message -Message "Builtin administrator account enabled" -Level "NOTICE"
 
-            Set-LocalUser -Name "Administrator" -Password $AdminCred.Password
-            Write-Message -Message "Administrator password updated" -Level "NOTICE"
+            if ($null -eq $AdminCred) {
+                Write-Message -Message "Password not provided. Aborting." -Level "ERROR" -Dialogue $true
+                Disable-LocalUser -Name "Administrator"
+                exit 1
+            }
+            else {
+                Set-LocalUser -Name "Administrator" -Password $AdminCred.Password
+                Write-Message -Message "Administrator password updated" -Level "NOTICE"
+            }
 
             $SetByScript = 1
         }
@@ -119,17 +146,23 @@ function Install-EVHelperApp {
             exit 1
         }
     }
-    else {
-        Write-Message -Message  "Account is already enabled" -Level "INFO"
-    }
 
     Write-Message -Message  "Installing Endpoint Verification Helper..." -Level "INFO"
-    try {            
-        Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$EVHelperPath`"" -Credential $AdminCred -Wait
-        Write-Message -Message  "Endpoint Verification Helper installed" -Level "NOTICE" -ForegroundColor Green
+
+    try {
+        $Process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i", "`"$EVHelperPath`"", "/qn", "/norestart" -Credential $AdminCred -Wait -PassThru
+
+        if ($Process.ExitCode -eq 0) {
+            Write-Message -Message "Endpoint Verification Helper installed successfully." -Level "NOTICE" -ForegroundColor Green
+        }
+        else {
+            Write-Message -Message "Installation failed!`n`n`MSI exit code: $($Process.ExitCode)`n`nThis is likely due to security policies enforced on this device." -Level "ERROR" -Dialogue $true
+            Write-Message -Message "Please visit this page for troubleshooting steps:`n`nhttps://github.com/HTTP-218/Endpoint_Verification?tab=readme-ov-file#troubleshooting" -Level "ERROR" -Dialogue $true
+            exit 1
+        }
     }
     catch {
-        Write-Message -Message  "Installation failed!`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+        Write-Message -Message  "Failed to start MSI installation process:`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
         exit 1
     }
 
