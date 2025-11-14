@@ -121,6 +121,9 @@ function Install-EVHelperApp {
             Write-Message -Message "User cancelled enabling Administrator account." -Level "NOTICE"
             exit 1
         }
+        else {
+            $AdminCred = Get-Credential -UserName "Administrator" -Message "Enter a new password for the account."
+        }
 
         try {
             Enable-LocalUser -Name "Administrator"
