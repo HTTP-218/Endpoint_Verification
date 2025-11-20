@@ -28,9 +28,13 @@ function Get-WindowsBuild {
             return @{
                 IsCompliant = $false
                 Message = "Windows build $($DisplayVersion) is not supported"
-        }
+            }
         } 
         else {
+            if ($MatchingRequirement.EOL -eq $true) {
+                Write-Message -Message "Windows build $($DisplayVersion) is EOL but temporarily supported. Please upgrade as soon as possible." -Level "WARN"
+            }
+
             Write-Message -Message "Windows is compliant with $($MatchingRequirement.Label) (Build $WindowsBuild)" -Level "INFO"
             return @{
                 IsCompliant = $true
