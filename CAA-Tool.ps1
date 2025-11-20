@@ -25,7 +25,7 @@ if (-not $ScanOnly) {
     }
 }
 
-$BaseURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/feature/eol-warning"
+$BaseURL = "https://raw.githubusercontent.com/HTTP-218/Endpoint_Verification/dev"
 
 Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Logs.psm1")
 Invoke-Expression (Invoke-RestMethod "$BaseURL/Modules/CAA-Scan.psm1")
