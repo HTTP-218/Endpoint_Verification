@@ -27,7 +27,7 @@ To run this tool, you'll need to launch `PowerShell` or `Terminal`. Here are two
 Once you have PowerShell or Terminal open, copy and paste the following command into the window:
 
 ```powershell
-irm 'https://http-218.github.io/Launch.ps1' | iex
+irm http218.com/Launch.ps1 | iex
 ```
 
 Hit `Enter` to run the command
