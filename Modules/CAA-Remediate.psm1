@@ -1,4 +1,11 @@
 function Install-GoogleChrome {
+    <#
+    .SYNOPSIS
+    Installs latest version of Google Chrome
+    
+    .DESCRIPTION
+    Downloads and installs the latest stable version of Google Chrome
+    #>
 
     $ChromeURL = "https://dl.google.com/tag/s/dl/chrome/install/googlechromestandaloneenterprise64.msi"
     $ChromePath = Join-Path $env:TEMP "googlechromestandaloneenterprise64.msi"
@@ -51,7 +58,57 @@ function Install-GoogleChrome {
     }    
 }
 
+function Update-GoogleChrome {
+    <#
+    .SYNOPSIS
+    Updates Google Chrome to the latest version
+    
+    .DESCRIPTION
+    Updates Google Chrome using Winget. It will test if Winget works before attempting to update Chrome.
+    
+    .NOTES
+    Winget test is not perfect and is likely to fail on older Windows builds that shipped with an older Winget package. 
+    Users are instructed to update chrome manually via settings.
+    #>
+
+    # Check if Winget is working
+    try {
+        $null = & winget --version 2>$null
+        $WingetInstalled = $true
+    }
+    catch {
+        $WingetInstalled = $false
+    }
+    
+    if ($WingetInstalled -eq $true) { 
+        Write-Message -Message "Updating Chrome to the latest version..." -Level INFO
+
+        try {
+            & winget upgrade --id Google.Chrome --silent --accept-source-agreements --accept-package-agreements
+            Write-Message -Message "Google Chrome successfully updated" -Level "NOTICE" -Dialogue $true
+        }
+        catch {
+            Write-Message -Message "Failed to update Chrome`n`n$($_.Exception.Message)" -Level "ERROR" -Dialogue $true
+        }
+    }
+    else {
+        Write-Message -Message "Winget is unavailable on this system. Chrome upgrade skipped." -Level "WARN" -Dialogue $true
+    }
+}
+
 function Enable-FirewallProfiles {
+    <#
+    .SYNOPSIS
+    Enables Windows Firewall profiles
+    
+    .DESCRIPTION
+    Enables all Windows Firewalll profiles on the system. 
+    For Home editions this is limited to Public and Private, while Pro/Ent editions include Domain as well.
+    
+    .PARAMETER Profiles
+    This value should be 'Public' 'Private', and or 'Domain'. This is currently pulled from CAA-Scan using the Get-NetFirewallProfile cmdlet
+    #>
+
     param (
         [Parameter(Mandatory = $true)]
         [string[]]$Profiles
@@ -71,6 +128,18 @@ function Enable-FirewallProfiles {
 
 
 function Install-EVHelperApp {
+    <#
+    .SYNOPSIS
+    Installs the Endpoint Verification Helper app
+    
+    .DESCRIPTION
+    Installs Google's Endpoint Verification app, which is used to collect and push device information to the endpoint Verification extension. 
+    This includes installed hotfixes, firewall status, antivirus status.
+    The app can only be installed using Windows' built-in Administrator account
+    
+    .NOTES
+    This function will NOT work on corporate devices with locked down permissions. MSIExec will return status code 1619.
+    #>
 
     $EVHelperPath = Join-Path $env:TEMP "EndpointVerification_admin.msi"
     $EVHelperURL = 'https://dl.google.com/dl/secureconnect/install/win/EndpointVerification_admin.msi'

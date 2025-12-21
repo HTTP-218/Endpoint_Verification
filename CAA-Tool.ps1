@@ -86,7 +86,7 @@ if ($WindowsBuildCheck.IsCompliant -eq $false) {
 #region [Chrome Check]
 #============================
 $ChromeCheck = Get-ChromeStatus -ChromeVersion $Variables.ChromeVersion
-if ($ChromeCheck.IsCompliant -eq $false -and $ChromeCheck.Message -eq "Chrome is not installed") {
+if ($ChromeCheck.IsCompliant -eq $false -and $ChromeCheck.Reason -eq "Missing") {
 
     if (-not $ScanOnly) {    
         $InstallResponse = Show-MessageBox -Message "Google Chrome is missing.`n`nWould you like to install it now?" -Title "Install Google Chrome?" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
@@ -103,8 +103,22 @@ if ($ChromeCheck.IsCompliant -eq $false -and $ChromeCheck.Message -eq "Chrome is
         $Summary.Add($ChromeCheck.Message)
     }
 }
-elseif ($ChromeCheck.IsCompliant -eq $false) {
-    $Summary.Add($ChromeCheck.Message)
+elseif ($ChromeCheck.IsCompliant -eq $false -and $ChromeCheck.Reason -eq "Outdated") {
+
+    if (-not $ScanOnly) {
+        $UpdateResponse = Show-MessageBox -Message "Google Chrome out of date.`n`nWould you like to update it now?" -Title "Update Google Chrome?" -Icon "Question" -Buttons ([System.Windows.Forms.MessageBoxButtons]::YesNo)
+        
+        if ($UpdateResponse -eq [System.Windows.Forms.DialogResult]::Yes) {
+            Update-GoogleChrome
+        }
+        else {
+            Write-Message -Message "User chose not to update Google Chrome." -Level "NOTICE"
+            $Summary.Add("Google Chrome is not up to date")
+        } 
+    }
+    else {
+        $Summary.Add($ChromeCheck.Message)
+    }
 }
 #endregion
 
