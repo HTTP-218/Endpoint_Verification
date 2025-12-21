@@ -59,6 +59,7 @@ function Get-ChromeStatus {
         Write-Message -Message "Google Chrome is not installed on this device" -Level "WARN"
         return @{
             IsCompliant = $false
+            Reason = "Missing"
             Message = "Chrome is not installed"
         }
     }
@@ -68,6 +69,7 @@ function Get-ChromeStatus {
             Write-Message -Message "Chrome is not compliant" -Level "WARN"
             return @{
                 IsCompliant = $false
+                Reason = "Outdated"
                 Message = "Chrome version $($Chrome.Version) is below the minimum requirement"
             }
         }   
